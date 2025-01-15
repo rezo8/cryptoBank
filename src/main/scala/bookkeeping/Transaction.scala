@@ -17,7 +17,7 @@ case class Transaction(
   }
 
   def totalInputs(): TransactionValue =
-    inputs.values.foldLeft[TransactionValue](fixedZero)((curr, acc) =>
+    inputs.values.foldLeft[TransactionValue](fixedZero)((acc, curr) =>
       TransactionValue(curr.bitCoinChunk.+(acc.bitCoinChunk))
     )
 
@@ -26,7 +26,7 @@ case class Transaction(
   }
 
   def totalOutputs(): TransactionValue =
-    outputs.values.foldLeft[TransactionValue](fixedZero)((curr, acc) =>
+    outputs.values.foldLeft[TransactionValue](fixedZero)((acc, curr) =>
       TransactionValue(curr.bitCoinChunk.+(acc.bitCoinChunk))
     )
 
