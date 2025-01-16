@@ -9,6 +9,7 @@ import scala.util.Random._
 import bookkeeping.BookkeepingFixtures._
 
 import java.util.UUID._
+import models.TransactionChain
 
 class TransactionChainSpec extends AnyFlatSpec with should.Matchers {
 

@@ -3,6 +3,7 @@ package bookkeeping
 import java.util.UUID
 import java.util.UUID._
 import java.time.Instant
+import models.{Transaction, TransactionValue, Wallet}
 
 object BookkeepingFixtures {
 

@@ -1,10 +1,12 @@
-package bookkeeping
+package models
 
 // Unfortunately transaction chains are inherently mutable so they don't fit
 // great in the Scala Ecosystem of things. So here is a kind of homegrown DoublyLinkedList
 // to avoid importing deprecated classes
 
 // Node definition for the doubly linked list
+// We probably don't want this to be a doubly linked list.
+
 case class Node[A](
     var value: A,
     var prev: Option[Node[A]] = None,
