@@ -10,7 +10,7 @@ case class Transaction(
       TransactionValue
     ], // TODO build wrapper class around UUIDs
     outputs: Map[UUID, TransactionValue],
-    transactionTime: Instant = Instant.now()
+    transactionTime: Instant
 ) {
 
   def inputWalletIds(): Seq[UUID] = {

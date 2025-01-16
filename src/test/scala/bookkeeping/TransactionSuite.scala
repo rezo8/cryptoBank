@@ -3,6 +3,7 @@ import bookkeeping._
 import bookkeeping.BookkeepingFixtures._
 
 import java.util.UUID._
+
 // https://scalameta.org/munit/docs/getting-started.html
 class TransactionSuiteSuite extends munit.FunSuite {
   import scala.util.Random._

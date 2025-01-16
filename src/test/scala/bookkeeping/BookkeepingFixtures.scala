@@ -2,6 +2,7 @@ package bookkeeping
 
 import java.util.UUID
 import java.util.UUID._
+import java.time.Instant
 
 object BookkeepingFixtures {
 
@@ -20,9 +21,15 @@ object BookkeepingFixtures {
       outputs: Map[UUID, TransactionValue] = Map(
         randomUUID() -> nextTransactionValue(0.10),
         randomUUID() -> nextTransactionValue(0.20)
-      )
+      ),
+      transactionTime: Instant = Instant.now()
   ): Transaction = {
-    return Transaction(transactionId, inputs, outputs)
+    return Transaction(
+      transactionId,
+      inputs,
+      outputs,
+      transactionTime
+    )
   }
 
   def nextWallet(
@@ -32,5 +39,4 @@ object BookkeepingFixtures {
   ): Wallet = {
     Wallet(uuid, userId, coins)
   }
-
 }
