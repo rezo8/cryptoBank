@@ -12,6 +12,7 @@ object BookkeepingFixtures {
   }
 
   def nextTransaction(
+      transactionId: UUID = randomUUID(),
       inputs: Map[UUID, TransactionValue] = Map(
         randomUUID() -> nextTransactionValue(),
         randomUUID() -> nextTransactionValue()
@@ -21,7 +22,7 @@ object BookkeepingFixtures {
         randomUUID() -> nextTransactionValue(0.20)
       )
   ): Transaction = {
-    return Transaction(inputs, outputs)
+    return Transaction(transactionId, inputs, outputs)
   }
 
   def nextWallet(

@@ -4,8 +4,9 @@ import java.time.Instant
 import java.util.UUID
 
 case class Transaction(
+    transactionId: UUID, // TODO build wrapper class.
     inputs: Map[
-      UUID,
+      UUID, // This is a wallet Id.
       TransactionValue
     ], // TODO build wrapper class around UUIDs
     outputs: Map[UUID, TransactionValue],

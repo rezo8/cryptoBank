@@ -19,7 +19,7 @@ class TransactionSuiteSuite extends munit.FunSuite {
       randomUUID() -> nextTransactionValue(0.20),
       randomUUID() -> nextTransactionValue(0.20)
     )
-    val transaction = nextTransaction(inputs, outputs)
+    val transaction = nextTransaction(inputs = inputs, outputs = outputs)
     val expectedFee = nextTransactionValue(0.05)
 
     assertEquals(transaction.transactionFee(), expectedFee)
@@ -54,7 +54,7 @@ class TransactionSuiteSuite extends munit.FunSuite {
   }
 
   test("TransactionChain::totalTransactionFees") {
-    // Test singleton case
+    // Test empty case
 
     var transactionChain = new TransactionChain()
     assertEquals(
