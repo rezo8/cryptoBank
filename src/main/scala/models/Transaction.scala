@@ -10,6 +10,10 @@ case class Transaction(
       TransactionValue
     ], // TODO build wrapper class around UUIDs
     outputs: Map[UUID, TransactionValue],
+    changeAddressOpt: Option[
+      UUID
+    ], // The ID of the address the change goes to if there is change. Will exist in the change address..
+    itemOfPurchase: String,
     transactionTime: Instant
 ) {
 
@@ -31,10 +35,29 @@ case class Transaction(
       TransactionValue(curr.bitCoinChunk.+(acc.bitCoinChunk))
     )
 
-  def transactionFee(): TransactionValue = {
+  def nonChangeOutputs(): TransactionValue =
+    outputs.foldLeft[TransactionValue](fixedZero)((acc, curr) => {
+      if (Some(curr._1) != this.changeAddressOpt) {
+        TransactionValue(curr._2.bitCoinChunk.+(acc.bitCoinChunk))
+      } else {
+        acc
+      }
+    })
 
+  def getChange(): Option[TransactionValue] = {
+    this.changeAddressOpt.fold[Option[TransactionValue]](None)(
+      changeAddress => {
+        this.outputs.get(changeAddress)
+      }
+    )
+  }
+
+  def transactionFee(): TransactionValue = {
     return TransactionValue(
-      this.totalInputs().bitCoinChunk.-(this.totalOutputs().bitCoinChunk)
+      this
+        .totalInputs()
+        .bitCoinChunk
+        .-(this.nonChangeOutputs().bitCoinChunk)
     )
   }
 

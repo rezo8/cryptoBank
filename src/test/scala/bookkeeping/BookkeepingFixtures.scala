@@ -3,6 +3,7 @@ package bookkeeping
 import java.util.UUID
 import java.util.UUID._
 import java.time.Instant
+import scala.util.Random
 import models.{Transaction, TransactionValue, Wallet}
 
 object BookkeepingFixtures {
@@ -13,6 +14,8 @@ object BookkeepingFixtures {
     return TransactionValue(value)
   }
 
+  // Arguable that the inputs and outputs in this are dumb as the transaction is invalid.
+  // TODO fix to guarantee random transactions validity.
   def nextTransaction(
       transactionId: UUID = randomUUID(),
       inputs: Map[UUID, TransactionValue] = Map(
@@ -20,15 +23,19 @@ object BookkeepingFixtures {
         randomUUID() -> nextTransactionValue()
       ),
       outputs: Map[UUID, TransactionValue] = Map(
-        randomUUID() -> nextTransactionValue(0.10),
-        randomUUID() -> nextTransactionValue(0.20)
+        randomUUID() -> nextTransactionValue(),
+        randomUUID() -> nextTransactionValue()
       ),
+      changeAddressOpt: Option[UUID] = Some(randomUUID()),
+      itemOfPurchase: String = Random.nextString(10),
       transactionTime: Instant = Instant.now()
   ): Transaction = {
     return Transaction(
       transactionId,
       inputs,
       outputs,
+      changeAddressOpt,
+      itemOfPurchase,
       transactionTime
     )
   }
