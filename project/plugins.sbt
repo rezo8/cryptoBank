@@ -1,0 +1,1 @@
+addSbtPlugin() // Latest version

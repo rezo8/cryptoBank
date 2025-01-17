@@ -9,6 +9,8 @@ lazy val root = project
     libraryDependencies ++= Seq(
       // Doobie Imports
       "org.tpolecat" %% "doobie-core" % "1.0.0-RC4",
+      "org.tpolecat" %% "doobie-postgres" % "1.0.0-RC4",
+      "org.tpolecat" %% "doobie-hikari" % "1.0.0-RC4",
 
       // And add any of these as needed
       "org.tpolecat" %% "doobie-h2" % "1.0.0-RC4", // H2 driver 1.4.200 + type mappings.

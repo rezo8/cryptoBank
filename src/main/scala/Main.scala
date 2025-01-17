@@ -1,5 +1,7 @@
-@main def hello(): Unit =
-  println("Hello world!")
-  println(msg)
+package main
 
-def msg = "This machine kills fascists"
+object Main extends App {
+
+  Console.println("Hello World: " + (args mkString ", "))
+
+}
