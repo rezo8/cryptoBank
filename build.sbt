@@ -12,13 +12,6 @@ lazy val root = project
       "org.tpolecat" %% "doobie-postgres" % "1.0.0-RC6",
       "org.tpolecat" %% "doobie-hikari" % "1.0.0-RC6",
 
-      // And add any of these as needed
-      "org.tpolecat" %% "doobie-h2" % "1.0.0-RC6", // H2 driver 1.4.200 + type mappings.
-      "org.tpolecat" %% "doobie-hikari" % "1.0.0-RC6", // HikariCP transactor.
-      "org.tpolecat" %% "doobie-postgres" % "1.0.0-RC6", // Postgres driver 42.6.0 + type mappings.
-      "org.tpolecat" %% "doobie-specs2" % "1.0.0-RC6" % "test", // Specs2 support for typechecking statements.
-      "org.tpolecat" %% "doobie-scalatest" % "1.0.0-RC6" % "test", // ScalaTest support for typechecking statements.
-
       // Scalactic imports
       "org.scalactic" %% "scalactic" % "3.2.19",
       "org.scalatest" %% "scalatest" % "3.2.19" % "test",
@@ -31,11 +24,14 @@ lazy val root = project
       "com.typesafe" % "config" % "1.4.3",
       "com.github.pureconfig" %% "pureconfig-core" % "0.17.8",
       // Flyway
-      "org.flywaydb"           % "flyway-core"                % "10.4.1",
-      "org.flywaydb"           % "flyway-database-postgresql" % "10.4.1" % "runtime",
+      "org.flywaydb" % "flyway-core" % "10.4.1",
+      "org.flywaydb" % "flyway-database-postgresql" % "10.4.1" % "runtime",
 
       // Zio
-      "dev.zio" %% "zio" % "2.1.14"
+      "dev.zio" %% "zio" % "2.1.14",
+
+      // cats
+      "org.typelevel" %% "cats-effect-testing-scalatest" % "1.6.0"
     )
   )
 

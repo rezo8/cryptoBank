@@ -1,10 +1,10 @@
-package bookkeeping
+package models
 
-import org.scalatest.*
-import flatspec.*
-import matchers.*
-import bookkeeping.BookkeepingFixtures.*
+import fixtures.BookkeepingFixtures.*
 import models.{Transaction, TransactionValue}
+import org.scalatest.*
+import org.scalatest.flatspec.*
+import org.scalatest.matchers.*
 
 import java.util.UUID
 import java.util.UUID.*

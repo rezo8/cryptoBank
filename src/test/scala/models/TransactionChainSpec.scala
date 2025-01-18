@@ -1,28 +1,22 @@
-package bookkeeping
+package models
 
-import collection.mutable.Stack
-import org.scalatest._
-import flatspec._
-import matchers._
-import scala.util.Random._
-
-import bookkeeping.BookkeepingFixtures._
-
-import java.util.UUID._
-import models.TransactionChain
+import fixtures.BookkeepingFixtures.*
+import org.scalatest.*
+import org.scalatest.flatspec.*
+import org.scalatest.matchers.*
 
 class TransactionChainSpec extends AnyFlatSpec with should.Matchers {
 
   it should "properly initialize an empty Transaction Chain" in {
-    var transactionChain = new TransactionChain()
+    val transactionChain = new TransactionChain()
     transactionChain.removeHead() shouldBe None
     transactionChain.removeTail() shouldBe None
   }
 
   it should "properly prepend a transaction to the head of a transactionChain" in {
-    var transactionChain = new TransactionChain()
-    var firstTransaction = nextTransaction()
-    var secondTransaction = nextTransaction()
+    val transactionChain = new TransactionChain()
+    val firstTransaction = nextTransaction()
+    val secondTransaction = nextTransaction()
 
     transactionChain.prepend(secondTransaction)
     transactionChain.prepend(firstTransaction)
@@ -30,9 +24,9 @@ class TransactionChainSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "properly append a transaction to the tail of a transactionChain" in {
-    var transactionChain = new TransactionChain()
-    var firstTransaction = nextTransaction()
-    var secondTransaction = nextTransaction()
+    val transactionChain = new TransactionChain()
+    val firstTransaction = nextTransaction()
+    val secondTransaction = nextTransaction()
 
     transactionChain.append(firstTransaction)
     transactionChain.append(secondTransaction)

@@ -1,10 +1,11 @@
-package bookkeeping
+package fixtures
 
-import java.util.UUID
-import java.util.UUID._
-import java.time.Instant
-import scala.util.Random
 import models.{Transaction, TransactionValue, Wallet}
+
+import java.time.Instant
+import java.util.UUID
+import java.util.UUID.*
+import scala.util.Random
 
 object BookkeepingFixtures {
 

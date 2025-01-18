@@ -6,7 +6,7 @@ import _root_.config.{
 }
 import components.DbMigrationComponent
 import pureconfig.ConfigSource
-import zio.{Scope, ZIO, ZIOAppArgs, ZIOAppDefault}
+import zio.{ZIO, ZIOAppDefault}
 
 object Main extends ZIOAppDefault with DbMigrationComponent {
 
