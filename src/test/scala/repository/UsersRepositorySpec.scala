@@ -1,16 +1,14 @@
 package repository
 
 import cats.effect.*
-import cats.effect.kernel.MonadCancelThrow
 import cats.effect.testing.scalatest.AsyncIOSpec
 import config.{AppConfig, ConfigLoadException, DatabaseConfig, DerivedConfig}
 import fixtures.UsersFixtures
-import org.postgresql.util.PSQLException
 import org.scalatest.flatspec.AsyncFlatSpec
 import org.scalatest.matchers.should
-import pureconfig.{ConfigSource, loadConfig}
+import pureconfig.ConfigSource
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 class UsersRepositorySpec
     extends AsyncFlatSpec
@@ -33,12 +31,12 @@ class UsersRepositorySpec
   it should "properly create and load user" in {
     val user = UsersFixtures.nextUser()
 
-    val res = usersRepository.createUser(user)
+    val res = usersRepository.safeCreateUser(user)
 
     val loaded = for {
-      uuid <- usersRepository.createUser(user)
+      uuidEither <- usersRepository.safeCreateUser(user)
+      uuid = uuidEither.getOrElse(throw new Exception())
       loadedUser <- usersRepository.getUser(uuid)
-
     } yield loadedUser
 
     loaded.map(userOpt => {
@@ -53,27 +51,25 @@ class UsersRepositorySpec
 
   it should "not be able to create a user with duplicate email" in {
     val user = UsersFixtures.nextUser()
-
-    val res = usersRepository.createUser(user)
-
     val duplicateUser = user.copy(phoneNumber = UsersFixtures.nextPhoneNumber())
 
     // TODO fix the test so it can catch throwing. Maybe make return Option?
     val loaded = for {
-      createOne <- usersRepository.createUser(user)
-      createTwo <- usersRepository.createUser(duplicateUser)
+      createOne <- usersRepository.safeCreateUser(user)
+      createTwo <- usersRepository.safeCreateUser(duplicateUser)
       _ = println("test")
     } yield createTwo
-    assertThrows[PSQLException](loaded)
+
+    loaded.map(loadedOpt => assert(loadedOpt.isLeft))
   }
 
   it should "properly create and load user by email" in {
     val user = UsersFixtures.nextUser()
 
-    val res = usersRepository.createUser(user)
+    val res = usersRepository.safeCreateUser(user)
 
     val loaded = for {
-      uuid <- usersRepository.createUser(user)
+      uuid <- usersRepository.safeCreateUser(user)
       loadedUser <- usersRepository.getUserByEmail(user.email)
 
     } yield loadedUser

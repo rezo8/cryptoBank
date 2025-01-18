@@ -23,8 +23,15 @@ abstract class UsersRepository {
       logHandler = None
     )
 
+  def safeCreateUser(
+      user: User
+  ): IO[Either[String, UUID]] = {
+    createUser(user).attemptSomeSqlState {
+      case sqlstate.class23.UNIQUE_VIOLATION => "Oops!"
+    }
+  }
   // Insert user
-  def createUser(
+  private def createUser(
       user: User
   ): IO[UUID] =
     sql"""
@@ -49,17 +56,4 @@ abstract class UsersRepository {
       WHERE email = $email
     """.query[User].option.transact(transactor)
 
-  // Update user
-  def updateUser(
-      id: UUID,
-      firstName: String,
-      lastName: String,
-      email: String,
-      phoneNumber: String
-  ): IO[Boolean] =
-    sql"""
-      UPDATE users
-      SET firstName = $firstName, lastName = $lastName, email = $email, phoneNumber = $phoneNumber
-      WHERE id = $id
-    """.update.run.transact(transactor).map(_ > 0)
 }
