@@ -1,7 +1,27 @@
-package main
+import _root_.config.{
+  AppConfig,
+  ConfigLoadException,
+  DatabaseConfig,
+  DerivedConfig
+}
+import components.DbMigrationComponent
+import pureconfig.ConfigSource
+import zio.{Scope, ZIO, ZIOAppArgs, ZIOAppDefault}
 
-object Main extends App {
+object Main extends ZIOAppDefault with DbMigrationComponent {
 
-  Console.println("Hello World: " + (args mkString ", "))
+  val config = ConfigSource.default
+    .at("app")
+    .load[DerivedConfig]
+    .getOrElse(throw new ConfigLoadException())
+    .asInstanceOf[AppConfig]
 
+  override val dbConfig: DatabaseConfig = config.database
+
+  override def run: ZIO[Any, Nothing, Unit] = {
+    for {
+      a <- this.flyWayInitialize()
+      _ = println("ran flyway")
+    } yield ()
+  }
 }
