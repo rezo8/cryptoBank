@@ -5,11 +5,13 @@ import _root_.config.{
   DerivedConfig
 }
 import components.DbMigrationComponent
-import httpServer.BaseServer
+import httpServer.{BaseServer, UserRoutes}
 import pureconfig.ConfigSource
-import zio.{ZIO, ZIOAppDefault}
+import repository.UsersRepository
+import zio.*
 
 object Main extends ZIOAppDefault with DbMigrationComponent with BaseServer {
+  main =>
 
   val config: AppConfig = ConfigSource.default
     .at("app")
@@ -18,6 +20,13 @@ object Main extends ZIOAppDefault with DbMigrationComponent with BaseServer {
     .asInstanceOf[AppConfig]
 
   override val dbConfig: DatabaseConfig = config.database
+
+  // Repositories
+  private val usersRepository = new UsersRepository:
+    override lazy val dbConfig: DatabaseConfig = config.database
+  // Routes
+  override val userRoutes: UserRoutes = new UserRoutes:
+    override val usersRepository: UsersRepository = main.usersRepository
 
   private def appLogic = {
     for {

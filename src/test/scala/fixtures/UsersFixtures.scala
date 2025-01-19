@@ -8,7 +8,7 @@ import scala.util.Random
 object UsersFixtures {
 
   def nextUser(
-      id: UUID = UUID.randomUUID(),
+      id: Option[UUID] = Some(UUID.randomUUID()),
       firstName: String = new String(Random.alphanumeric.take(10).toArray),
       lastName: String = new String(Random.alphanumeric.take(10).toArray),
       email: String = nextEmail(),

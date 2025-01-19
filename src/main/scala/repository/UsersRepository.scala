@@ -8,6 +8,7 @@ import doobie.postgres.*
 import doobie.postgres.implicits.*
 import doobie.util.transactor.Transactor
 import models.User
+import zio.interop.catz.*
 
 import java.util.UUID
 
@@ -27,7 +28,8 @@ abstract class UsersRepository {
       user: User
   ): IO[Either[String, UUID]] = {
     createUser(user).attemptSomeSqlState {
-      case sqlstate.class23.UNIQUE_VIOLATION => "Oops!"
+      case sqlstate.class23.UNIQUE_VIOLATION =>
+        "User already exists. Please change email or phone number"
     }
   }
   // Insert user

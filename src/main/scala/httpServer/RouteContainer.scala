@@ -1,7 +1,8 @@
 package httpServer
 
-import zio.http.{Route, Routes}
+import zio.*
+import zio.http.{Routes, *}
 
 trait RouteContainer {
-  def routes: Iterable[Route[Any, Exception]]
+  def routes: Routes[Any, Response]
 }

@@ -1,20 +1,13 @@
 package httpServer
 
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import models.User
 import repository.UsersRepository
-import zio.json.*
-import zio.{IO, ZIO}
-import zio.http.*
-import zio._
-import zio.http._
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
-
-import java.util.UUID
-import zio.interop.catz.*
-import cats.effect.unsafe.implicits.global
 import zio.*
+import zio.http.*
+import zio.interop.catz.*
+import zio.json.*
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -24,50 +17,34 @@ abstract class UserRoutes extends RouteContainer {
     scala.concurrent.ExecutionContext.Implicits.global
   private val rootUrl = "users"
 
-  // Simulate an async database call using Future
-  def getUserById(userId: Int): Future[String] = Future {
-    Thread.sleep(500) // Simulate delay
-    s"User details for ID: $userId"
-  }
-
-  val routes: HttpApp[Any, Throwable] = Http.collectZIO[Request](
-    Method.POST / Root -> {
-      handler { (req: Request) =>
-        {
-          ZIO
-            .fromFuture(implicit ec => getUserById(1))
-            .map(Response.text)
-            .catchAll(error => {
-              ZIO.succeed(Response.internalServerError(error.getMessage))
-            })
-        }
-      }
+  override val routes: Routes[Any, Response] = Routes(
+    Method.POST / "users" -> handler { (request: Request) =>
+      handleCreateUser(request)
     }
   )
 
-//
-//  override def routes: Seq[Route[Any, Exception]] = Seq(
-//    (Method.POST / rootUrl -> handler { (req: Request) =>
-//      val createResp = for {
-//        userBodyString <- req.body.asString
-//        user <- ZIO
-//          .fromEither(userBodyString.fromJson[User])
-//          .mapError(e => new RuntimeException(s"Invalid User JSON: $e"))
-//        createRes <- handleCreateUser(user)
-////        successfulCreate <- ZIO.fromEither(createRes)
-//      } yield createRes
-//
-//      createResp.flatMap(x => {
-//        x.fold(error => {
-//          Response.internalServerError(error)
-//        })
-//      })
-//    })
-//  )
-
-  private def handleCreateUser(user: User) = {
-    usersRepository
-      .safeCreateUser(user)
-      .to[Task]
+  private def handleCreateUser(
+      req: Request
+  ): ZIO[Any, Nothing, Response] = {
+    (for {
+      userBodyString <- req.body.asString
+      user <- ZIO.fromEither(userBodyString.fromJson[User])
+      createRes <- usersRepository
+        .safeCreateUser(user)
+        .to[Task]
+    } yield createRes).fold(
+      err => {
+        println(err)
+        Response.internalServerError("unexpected error")
+      },
+      success => {
+        success.fold(
+          errorMsg => Response.internalServerError(errorMsg),
+          success => {
+            Response.text(s"User created with UUID [${success.toString}]")
+          }
+        )
+      }
+    )
   }
 }
