@@ -28,11 +28,11 @@ object Main extends ZIOAppDefault with DbMigrationComponent with BaseServer {
   override val userRoutes: UserRoutes = new UserRoutes:
     override val usersRepository: UsersRepository = main.usersRepository
 
-  private def appLogic = {
+  private def appLogic: ZIO[Any, Throwable, Nothing] = {
     for {
       a <- this.flyWayInitialize()
-    } yield ()
-    startServer
+      x <- startServer
+    } yield x
   }
 
   private def cleanup = {
