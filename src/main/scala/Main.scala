@@ -1,14 +1,21 @@
+import cats.effect
+import cats.effect.IO
+import components.DbMigrationComponent
 import _root_.config.{
   AppConfig,
   ConfigLoadException,
   DatabaseConfig,
   DerivedConfig
 }
-import components.DbMigrationComponent
-import httpServer.{BaseServer, UserRoutes}
+import doobie.*
+import doobie.util.transactor.Transactor
+import doobie.util.transactor.Transactor.Aux
+import httpServer.{BaseServer, UserRoutes, WalletsRoutes}
 import pureconfig.ConfigSource
-import repository.UsersRepository
+import repository.{UsersRepository, WalletsRepository}
 import zio.*
+
+import scala.concurrent.ExecutionContext
 
 object Main extends ZIOAppDefault with DbMigrationComponent with BaseServer {
   main =>
@@ -20,13 +27,32 @@ object Main extends ZIOAppDefault with DbMigrationComponent with BaseServer {
     .asInstanceOf[AppConfig]
 
   override val dbConfig: DatabaseConfig = config.database
+  private val transactor =
+    Transactor.fromDriverManager[IO](
+      driver = "org.postgresql.Driver",
+      url = dbConfig.url,
+      user = dbConfig.user,
+      password = dbConfig.password,
+      logHandler = None
+    )
 
   // Repositories
   private val usersRepository = new UsersRepository:
-    override lazy val dbConfig: DatabaseConfig = config.database
+    override val transactor: Aux[effect.IO, Unit] = main.transactor
+
+  private val walletsRepository = new WalletsRepository:
+    override val transactor: Aux[effect.IO, Unit] = main.transactor
+
   // Routes
   override val userRoutes: UserRoutes = new UserRoutes:
+    override implicit val ec: ExecutionContext =
+      scala.concurrent.ExecutionContext.Implicits.global
     override val usersRepository: UsersRepository = main.usersRepository
+
+  override val walletsRoutes: WalletsRoutes = new WalletsRoutes:
+    override val walletsRepository: WalletsRepository = main.walletsRepository
+    override implicit val ec: ExecutionContext =
+      scala.concurrent.ExecutionContext.Implicits.global
 
   private def appLogic: ZIO[Any, Throwable, Nothing] = {
     for {

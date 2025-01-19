@@ -7,6 +7,7 @@ import doobie.implicits.*
 import doobie.postgres.*
 import doobie.postgres.implicits.*
 import doobie.util.transactor.Transactor
+import doobie.util.transactor.Transactor.Aux
 import models.User
 import repository.Exceptions.{
   ServerException,
@@ -20,16 +21,7 @@ import zio.interop.catz.*
 import java.util.UUID
 
 abstract class UsersRepository {
-  lazy val dbConfig: DatabaseConfig
-
-  private val transactor =
-    Transactor.fromDriverManager[IO](
-      driver = "org.postgresql.Driver",
-      url = dbConfig.url,
-      user = dbConfig.user,
-      password = dbConfig.password,
-      logHandler = None
-    )
+  val transactor: Aux[IO, Unit]
 
   def safeCreateUser(
       user: User

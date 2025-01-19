@@ -1,10 +1,10 @@
 package httpServer
 
 import cats.effect.unsafe.implicits.global
+import httpServer.Helpers.handleRepositoryProcess
 import httpServer.Requests.{CreateUserRequest, LoadUserByEmailRequest}
 import models.User
 import models.User.encoder
-import repository.Exceptions.ServerException
 import repository.UsersRepository
 import zio.*
 import zio.http.*
@@ -17,8 +17,7 @@ import scala.concurrent.ExecutionContext
 
 abstract class UserRoutes extends RouteContainer {
   val usersRepository: UsersRepository
-  implicit val ec: ExecutionContext =
-    scala.concurrent.ExecutionContext.Implicits.global
+  implicit val ec: ExecutionContext
   private val rootUrl = "users"
 
   override val routes: Routes[Any, Response] = Routes(
@@ -65,25 +64,5 @@ abstract class UserRoutes extends RouteContainer {
         .getUserByEmail(userRequest.email)
         .to[Task]
     } yield createRes)
-  }
-
-  private def handleRepositoryProcess[A](
-      repoProc: ZIO[Any, Serializable, Either[ServerException, A]]
-  )(implicit enc: zio.json.JsonEncoder[A]): ZIO[Any, Nothing, Response] = {
-    repoProc.fold(
-      err => {
-        println(err) // TODO add logging
-        Response.internalServerError("unexpected error")
-      },
-      success => {
-        success.fold(
-          error =>
-            Response.error(status = error.status, message = error.getMessage),
-          success => {
-            Response.text(success.toJson)
-          }
-        )
-      }
-    )
   }
 }
