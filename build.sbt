@@ -24,22 +24,15 @@ lazy val root = project
       "com.typesafe" % "config" % "1.4.3",
       "com.github.pureconfig" %% "pureconfig-core" % "0.17.8",
       // Flyway
-      "org.flywaydb" % "flyway-core" % "10.4.1",
-      "org.flywaydb" % "flyway-database-postgresql" % "10.4.1" % "runtime",
+      "org.flywaydb" % "flyway-core" % "11.2.0",
+      "org.flywaydb" % "flyway-database-postgresql" % "11.2.0" % "runtime",
 
       // Zio
       "dev.zio" %% "zio" % "2.1.14",
-      "dev.zio" %% "zio-http" % "3.0.1",
 
-// cats
+      // cats
       "org.typelevel" %% "cats-effect-testing-scalatest" % "1.6.0"
     )
   )
 
 enablePlugins(FlywayPlugin)
-
-flywayDriver := "org.postgresql.Driver"
-flywayUrl := "jdbc:postgresql://localhost:5432/postgres"
-flywayUser := "myuser"
-flywayPassword := "postgres"
-flywayLocations := Seq("classpath:db/migration")

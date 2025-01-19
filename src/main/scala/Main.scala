@@ -11,7 +11,7 @@ import zio.{ZIO, ZIOAppDefault}
 
 object Main extends ZIOAppDefault with DbMigrationComponent with BaseServer {
 
-  val config = ConfigSource.default
+  val config: AppConfig = ConfigSource.default
     .at("app")
     .load[DerivedConfig]
     .getOrElse(throw new ConfigLoadException())
