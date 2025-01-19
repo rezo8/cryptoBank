@@ -1,15 +1,14 @@
 package httpServer
 
-import cats.effect.IO
 import cats.effect.unsafe.implicits.global
-import models.User
+import httpServer.Requests.CreateUserRequest
 import repository.UsersRepository
 import zio.*
 import zio.http.*
 import zio.interop.catz.*
 import zio.json.*
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 abstract class UserRoutes extends RouteContainer {
   val usersRepository: UsersRepository
@@ -28,18 +27,19 @@ abstract class UserRoutes extends RouteContainer {
   ): ZIO[Any, Nothing, Response] = {
     (for {
       userBodyString <- req.body.asString
-      user <- ZIO.fromEither(userBodyString.fromJson[User])
+      userRequest <- ZIO.fromEither(userBodyString.fromJson[CreateUserRequest])
       createRes <- usersRepository
-        .safeCreateUser(user)
+        .safeCreateUser(userRequest.toUser())
         .to[Task]
     } yield createRes).fold(
       err => {
-        println(err)
+        println(err) // TODO add logging
         Response.internalServerError("unexpected error")
       },
       success => {
         success.fold(
-          errorMsg => Response.internalServerError(errorMsg),
+          error =>
+            Response.error(status = error.status, message = error.getMessage),
           success => {
             Response.text(s"User created with UUID [${success.toString}]")
           }

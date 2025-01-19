@@ -57,7 +57,6 @@ class UsersRepositorySpec
     val loaded = for {
       createOne <- usersRepository.safeCreateUser(user)
       createTwo <- usersRepository.safeCreateUser(duplicateUser)
-      _ = println("test")
     } yield createTwo
 
     loaded.map(loadedOpt => assert(loadedOpt.isLeft))

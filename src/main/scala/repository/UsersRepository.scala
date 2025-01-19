@@ -8,6 +8,7 @@ import doobie.postgres.*
 import doobie.postgres.implicits.*
 import doobie.util.transactor.Transactor
 import models.User
+import repository.Exceptions.{ServerException, Unexpected, UserAlreadyExists}
 import zio.interop.catz.*
 
 import java.util.UUID
@@ -26,10 +27,10 @@ abstract class UsersRepository {
 
   def safeCreateUser(
       user: User
-  ): IO[Either[String, UUID]] = {
+  ): IO[Either[ServerException, UUID]] = {
     createUser(user).attemptSomeSqlState {
-      case sqlstate.class23.UNIQUE_VIOLATION =>
-        "User already exists. Please change email or phone number"
+      case sqlstate.class23.UNIQUE_VIOLATION => UserAlreadyExists()
+      case _                                 => Unexpected()
     }
   }
   // Insert user
