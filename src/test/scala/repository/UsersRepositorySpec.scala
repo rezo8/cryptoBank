@@ -7,6 +7,7 @@ import fixtures.UsersFixtures
 import org.scalatest.flatspec.AsyncFlatSpec
 import org.scalatest.matchers.should
 import pureconfig.ConfigSource
+import repository.Exceptions.UserAlreadyExists
 
 import scala.concurrent.ExecutionContext
 
@@ -53,13 +54,16 @@ class UsersRepositorySpec
     val user = UsersFixtures.nextUser()
     val duplicateUser = user.copy(phoneNumber = UsersFixtures.nextPhoneNumber())
 
-    // TODO fix the test so it can catch throwing. Maybe make return Option?
     val loaded = for {
       createOne <- usersRepository.safeCreateUser(user)
       createTwo <- usersRepository.safeCreateUser(duplicateUser)
     } yield createTwo
 
-    loaded.map(loadedOpt => assert(loadedOpt.isLeft))
+    loaded.map(loadedOpt => {
+      assert(loadedOpt.isLeft)
+      val error = loadedOpt.left
+      error should be(UserAlreadyExists())
+    })
   }
 
   it should "properly create and load user by email" in {
