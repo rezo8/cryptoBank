@@ -57,8 +57,8 @@ object Main extends ZIOAppDefault with DbMigrationComponent with BaseServer {
   private def appLogic: ZIO[Any, Throwable, Nothing] = {
     for {
       a <- this.flyWayInitialize()
-      x <- startServer
-    } yield x
+      serverProc <- startServer
+    } yield serverProc
   }
 
   private def cleanup = {
