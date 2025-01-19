@@ -1,6 +1,6 @@
 package models
 
-import zio.json.{DeriveJsonDecoder, JsonDecoder}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 import java.util.UUID
 
@@ -15,4 +15,5 @@ final case class User(
 
 object User {
   implicit val decoder: JsonDecoder[User] = DeriveJsonDecoder.gen[User]
+  implicit val encoder: JsonEncoder[User] = DeriveJsonEncoder.gen[User]
 }

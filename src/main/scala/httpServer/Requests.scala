@@ -5,6 +5,13 @@ import zio.json.{DeriveJsonDecoder, JsonDecoder}
 
 object Requests {
 
+  final case class LoadUserByEmailRequest(
+      email: String
+  )
+  object LoadUserByEmailRequest {
+    implicit val decoder: JsonDecoder[LoadUserByEmailRequest] =
+      DeriveJsonDecoder.gen[LoadUserByEmailRequest]
+  }
   final case class CreateUserRequest(
       firstName: String,
       lastName: String,

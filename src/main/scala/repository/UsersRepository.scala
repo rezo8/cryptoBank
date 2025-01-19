@@ -8,7 +8,13 @@ import doobie.postgres.*
 import doobie.postgres.implicits.*
 import doobie.util.transactor.Transactor
 import models.User
-import repository.Exceptions.{ServerException, Unexpected, UserAlreadyExists}
+import repository.Exceptions.{
+  ServerException,
+  Unexpected,
+  UserAlreadyExists,
+  UserIsMissingByEmail,
+  UserIsMissingByUUID
+}
 import zio.interop.catz.*
 
 import java.util.UUID
@@ -33,6 +39,43 @@ abstract class UsersRepository {
       case _                                 => Unexpected()
     }
   }
+
+  // Load user by ID
+  def getUser(id: UUID): IO[Either[ServerException, User]] =
+    sql"""
+      SELECT id, firstName, lastName, email, phoneNumber, created_at
+      FROM users
+      WHERE id = $id
+    """
+      .query[User]
+      .option
+      .transact(transactor)
+      .map(
+        _.fold({
+          Left(UserIsMissingByUUID(id))
+        })(user => {
+          Right(user)
+        })
+      )
+
+  // Load user by ID
+  def getUserByEmail(email: String): IO[Either[ServerException, User]] =
+    sql"""
+      SELECT id, firstName, lastName, email, phoneNumber, created_at
+      FROM users
+      WHERE email = $email
+    """
+      .query[User]
+      .option
+      .transact(transactor)
+      .map(
+        _.fold({
+          Left(UserIsMissingByEmail(email))
+        })(user => {
+          Right(user)
+        })
+      )
+
   // Insert user
   private def createUser(
       user: User
@@ -42,21 +85,5 @@ abstract class UsersRepository {
       VALUES (${user.firstName}, ${user.lastName}, ${user.email}, ${user.phoneNumber})
       RETURNING id
     """.query[UUID].unique.transact(transactor)
-
-  // Load user by ID
-  def getUser(id: UUID): IO[Option[User]] =
-    sql"""
-      SELECT id, firstName, lastName, email, phoneNumber, created_at
-      FROM users
-      WHERE id = $id
-    """.query[User].option.transact(transactor)
-
-  // Load user by ID
-  def getUserByEmail(email: String): IO[Option[User]] =
-    sql"""
-      SELECT id, firstName, lastName, email, phoneNumber, created_at
-      FROM users
-      WHERE email = $email
-    """.query[User].option.transact(transactor)
 
 }

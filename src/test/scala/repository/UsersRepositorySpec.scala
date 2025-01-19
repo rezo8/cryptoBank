@@ -41,8 +41,7 @@ class UsersRepositorySpec
     } yield loadedUser
 
     loaded.map(userOpt => {
-      userOpt.isEmpty should be(false) // TODO fix this
-      val loadedUser = userOpt.get
+      val loadedUser = userOpt.getOrElse(throw new Exception())
       loadedUser.firstName should be(user.firstName)
       loadedUser.lastName should be(user.lastName)
       loadedUser.email should be(user.email)
@@ -78,8 +77,7 @@ class UsersRepositorySpec
     } yield loadedUser
 
     loaded.map(userOpt => {
-      userOpt.isEmpty should be(false) // TODO fix this
-      val loadedUser = userOpt.get
+      val loadedUser = userOpt.getOrElse(throw new Exception())
       loadedUser.firstName should be(user.firstName)
       loadedUser.lastName should be(user.lastName)
       loadedUser.email should be(user.email)
