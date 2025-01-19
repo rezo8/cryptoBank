@@ -5,10 +5,11 @@ import _root_.config.{
   DerivedConfig
 }
 import components.DbMigrationComponent
+import httpServer.BaseServer
 import pureconfig.ConfigSource
 import zio.{ZIO, ZIOAppDefault}
 
-object Main extends ZIOAppDefault with DbMigrationComponent {
+object Main extends ZIOAppDefault with DbMigrationComponent with BaseServer {
 
   val config = ConfigSource.default
     .at("app")
@@ -18,10 +19,21 @@ object Main extends ZIOAppDefault with DbMigrationComponent {
 
   override val dbConfig: DatabaseConfig = config.database
 
-  override def run: ZIO[Any, Nothing, Unit] = {
+  private def appLogic = {
     for {
       a <- this.flyWayInitialize()
-      _ = println("ran flyway")
     } yield ()
+    startServer
+  }
+
+  private def cleanup = {
+    // Perform cleanup operations here
+    // Fortunately ZIO Http Server comes with graceful shutdown built in: https://github.com/zio/zio-http/pull/2099/files
+    println("shutting down")
+    ZIO.unit
+  }
+
+  override def run: ZIO[Any, Throwable, Int] = {
+    appLogic.ensuring(cleanup)
   }
 }

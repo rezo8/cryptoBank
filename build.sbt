@@ -29,8 +29,9 @@ lazy val root = project
 
       // Zio
       "dev.zio" %% "zio" % "2.1.14",
+      "dev.zio" %% "zio-http" % "3.0.1",
 
-      // cats
+// cats
       "org.typelevel" %% "cats-effect-testing-scalatest" % "1.6.0"
     )
   )
