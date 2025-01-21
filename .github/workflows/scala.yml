@@ -22,8 +22,11 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
           cache: 'sbt'
+      - uses: sbt/setup-sbt@v1
+        with:
+          sbt-runner-version: 1.9.9
       - name: Run tests
-        run: sbt test
+        run: sbt -v +test
       - name: Formatting
         run: sbt scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
         # Optional: This step uploads information to the GitHub dependency graph and unblocking Dependabot alerts for the repository
