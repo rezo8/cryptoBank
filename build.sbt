@@ -19,6 +19,7 @@ lazy val root = project
       "org.scalatestplus" %% "scalacheck-1-17" % "3.2.18.0" % Test,
 
       // Database
+      "org.testcontainers" % "postgresql" % "1.20.4" % Test, // Replace with the latest version
       "org.scalikejdbc" %% "scalikejdbc" % "4.3.2",
 
       // config
