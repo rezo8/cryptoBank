@@ -1,39 +1,37 @@
 package repository
 
 import cats.effect.IO
-import config.DatabaseConfig
+import cats.effect.unsafe.implicits.global
 import doobie.*
 import doobie.implicits.*
 import doobie.postgres.*
 import doobie.postgres.implicits.*
-import doobie.util.transactor.Transactor
 import doobie.util.transactor.Transactor.Aux
 import models.User
-import repository.Exceptions.{
-  ServerException,
-  Unexpected,
-  UserAlreadyExists,
-  UserIsMissingByEmail,
-  UserIsMissingByUUID
-}
+import repository.Exceptions.*
+import zio.*
 import zio.interop.catz.*
 
 import java.util.UUID
 
+// TODO add service layer to move from DBException to a Server Exception
+//  rather than capturing here
 abstract class UsersRepository {
   val transactor: Aux[IO, Unit]
 
   def safeCreateUser(
       user: User
-  ): IO[Either[ServerException, UUID]] = {
-    createUser(user).attemptSomeSqlState {
-      case sqlstate.class23.UNIQUE_VIOLATION => UserAlreadyExists()
-      case _                                 => Unexpected()
-    }
+  ): Task[Either[ServerException, UUID]] = {
+    createUser(user)
+      .attemptSomeSqlState {
+        case sqlstate.class23.UNIQUE_VIOLATION => UserAlreadyExists()
+        case _                                 => Unexpected()
+      }
+      .to[Task]
   }
 
   // Load user by ID
-  def getUser(id: UUID): IO[Either[ServerException, User]] =
+  def getUser(id: UUID): Task[Either[ServerException, User]] =
     sql"""
       SELECT id, firstName, lastName, email, phoneNumber, created_at
       FROM users
@@ -49,9 +47,10 @@ abstract class UsersRepository {
           Right(user)
         })
       )
+      .to[Task]
 
   // Load user by ID
-  def getUserByEmail(email: String): IO[Either[ServerException, User]] =
+  def getUserByEmail(email: String): Task[Either[ServerException, User]] =
     sql"""
       SELECT id, firstName, lastName, email, phoneNumber, created_at
       FROM users
@@ -67,6 +66,7 @@ abstract class UsersRepository {
           Right(user)
         })
       )
+      .to[Task]
 
   // Insert user
   private def createUser(

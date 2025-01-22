@@ -12,7 +12,7 @@ object BookkeepingFixtures {
   def nextTransactionValue(
       value: BigDecimal = BigDecimal(math.random())
   ): TransactionValue = {
-    return TransactionValue(value)
+    TransactionValue(value)
   }
 
   // Arguable that the inputs and outputs in this are dumb as the transaction is invalid.
@@ -31,7 +31,7 @@ object BookkeepingFixtures {
       itemOfPurchase: String = Random.nextString(10),
       transactionTime: Instant = Instant.now()
   ): Transaction = {
-    return Transaction(
+    Transaction(
       transactionId,
       inputs,
       outputs,

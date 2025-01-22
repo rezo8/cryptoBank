@@ -44,7 +44,6 @@ object Exceptions {
     override def status: Status.Error = Status.NotFound
   }
 
-
   case class Unexpected() extends ServerException {
     override def getMessage: String =
       "Unexpected Exception"

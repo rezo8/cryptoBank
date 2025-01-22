@@ -3,7 +3,7 @@ package components
 import config.DatabaseConfig
 import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.output.MigrateResult
-import zio._
+import zio.*
 
 trait DbMigrationComponent {
   val dbConfig: DatabaseConfig

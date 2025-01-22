@@ -1,5 +1,6 @@
 val scala3Version = "3.6.2"
 
+val zioVersion = "2.1.14"
 lazy val root = project
   .in(file("."))
   .settings(
@@ -14,8 +15,8 @@ lazy val root = project
 
       // Scalactic imports
       "org.scalactic" %% "scalactic" % "3.2.19",
-      "org.scalatest" %% "scalatest" % "3.2.19" % "test",
-      "org.scalameta" %% "munit" % "1.0.4" % Test,
+      "org.scalatest" %% "scalatest" % "3.2.19" % Test,
+      "org.scalatestplus" %% "scalacheck-1-17" % "3.2.18.0" % Test,
 
       // Database
       "org.scalikejdbc" %% "scalikejdbc" % "4.3.2",
@@ -28,14 +29,19 @@ lazy val root = project
       "org.flywaydb" % "flyway-database-postgresql" % "11.2.0" % "runtime",
 
       // Zio
-      "dev.zio" %% "zio" % "2.1.14",
+      "dev.zio" %% "zio" % zioVersion,
       "dev.zio" %% "zio-http" % "3.0.1",
       "dev.zio" %% "zio-interop-cats" % "23.1.0.3",
-      "dev.zio" %% "zio-json" % "0.6.2",
+      "dev.zio" %% "zio-json" % "0.7.4",
+      "dev.zio" %% "zio-test" % zioVersion % Test,
+      "dev.zio" %% "zio-test-sbt" % zioVersion % Test,
+      "dev.zio" %% "zio-test-magnolia" % zioVersion % Test,
+      "dev.zio" %% "zio-test-junit" % zioVersion % Test,
 
       // cats
       "org.typelevel" %% "cats-effect-testing-scalatest" % "1.6.0"
-    )
+    ),
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
 
 enablePlugins(FlywayPlugin)
