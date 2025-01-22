@@ -2,14 +2,13 @@ package repository
 
 import cats.effect.*
 import cats.effect.testing.scalatest.AsyncIOSpec
-import config.{AppConfig, ConfigLoadException, DatabaseConfig, DerivedConfig}
 import doobie.util.transactor.Transactor
 import doobie.util.transactor.Transactor.Aux
 import fixtures.UsersFixtures
 import org.scalatest.flatspec.AsyncFlatSpec
 import org.scalatest.matchers.should
-import pureconfig.ConfigSource
 import repository.Exceptions.UserAlreadyExists
+import repository.testDbConfig
 
 import scala.concurrent.ExecutionContext
 
@@ -17,20 +16,14 @@ class UsersRepositorySpec
     extends AsyncFlatSpec
     with AsyncIOSpec
     with should.Matchers {
-  val dbConfig: DatabaseConfig = ConfigSource.default
-    .at("app")
-    .load[DerivedConfig]
-    .getOrElse(throw new ConfigLoadException())
-    .asInstanceOf[AppConfig]
-    .database
 
   val usersRepository: UsersRepository = new UsersRepository {
     override val transactor: Aux[IO, Unit] =
       Transactor.fromDriverManager[IO](
         driver = "org.postgresql.Driver",
-        url = dbConfig.url,
-        user = dbConfig.user,
-        password = dbConfig.password,
+        url = testDbConfig.url,
+        user = testDbConfig.user,
+        password = testDbConfig.password,
         logHandler = None
       )
   }
