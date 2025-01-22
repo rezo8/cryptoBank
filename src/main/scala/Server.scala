@@ -17,7 +17,7 @@ import zio.*
 
 import scala.concurrent.ExecutionContext
 
-object Main extends ZIOAppDefault with DbMigrationComponent with BaseServer {
+object Server extends ZIOAppDefault with DbMigrationComponent with BaseServer {
   main =>
 
   val config: AppConfig = ConfigSource.default
