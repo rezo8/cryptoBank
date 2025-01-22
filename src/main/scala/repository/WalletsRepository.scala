@@ -1,15 +1,15 @@
 package repository
 
 import cats.effect.IO
-import config.DatabaseConfig
+import cats.effect.unsafe.implicits.global
 import doobie.*
 import doobie.implicits.*
 import doobie.postgres.*
 import doobie.postgres.implicits.*
-import doobie.util.transactor.Transactor
 import doobie.util.transactor.Transactor.Aux
-import models.{User, Wallet}
+import models.Wallet
 import repository.Exceptions.*
+import zio.*
 import zio.interop.catz.*
 
 import java.util.UUID
@@ -20,14 +20,16 @@ abstract class WalletsRepository {
   def safeCreateWallet(
       userId: UUID,
       walletName: String
-  ): IO[Either[ServerException, UUID]] = {
-    createWallet(userId, walletName).attemptSomeSqlState {
-      case sqlstate.class23.UNIQUE_VIOLATION => WalletAlreadyExists(userId)
-      case _                                 => Unexpected()
-    }
+  ): Task[Either[ServerException, UUID]] = {
+    createWallet(userId, walletName)
+      .attemptSomeSqlState {
+        case sqlstate.class23.UNIQUE_VIOLATION => WalletAlreadyExists(userId)
+        case _                                 => Unexpected()
+      }
+      .to[Task]
   }
 
-  def getWalletByUserId(userId: UUID): IO[Either[ServerException, Wallet]] = {
+  def getWalletByUserId(userId: UUID): Task[Either[ServerException, Wallet]] = {
     sql"""
       SELECT id, ownerId, walletName
       FROM wallets
@@ -41,6 +43,7 @@ abstract class WalletsRepository {
           Left(WalletIsMissingByUserUUID(userId))
         })(Right(_))
       )
+      .to[Task]
   }
 
   // Insert Wallet

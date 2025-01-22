@@ -32,13 +32,13 @@ abstract class UserRoutes extends RouteContainer {
 
   private def handleLoadByEmail(email: String): ZIO[Any, Nothing, Response] = {
     handleRepositoryProcess[User](for {
-      loadRes <- usersRepository.getUserByEmail(email).to[Task]
+      loadRes <- usersRepository.getUserByEmail(email)
     } yield loadRes)
   }
 
   private def handleLoadById(id: UUID): ZIO[Any, Nothing, Response] = {
     handleRepositoryProcess[User](for {
-      loadRes <- usersRepository.getUser(id).to[Task]
+      loadRes <- usersRepository.getUser(id)
     } yield loadRes)
   }
 
@@ -48,9 +48,7 @@ abstract class UserRoutes extends RouteContainer {
     handleRepositoryProcess[UUID](for {
       userBodyString <- req.body.asString
       userRequest <- ZIO.fromEither(userBodyString.fromJson[CreateUserRequest])
-      createRes <- usersRepository
-        .safeCreateUser(userRequest.toUser())
-        .to[Task]
+      createRes <- usersRepository.safeCreateUser(userRequest.toUser())
     } yield createRes)
   }
 
@@ -60,9 +58,7 @@ abstract class UserRoutes extends RouteContainer {
       userRequest <- ZIO.fromEither(
         userBodyString.fromJson[LoadUserByEmailRequest]
       )
-      createRes <- usersRepository
-        .getUserByEmail(userRequest.email)
-        .to[Task]
+      createRes <- usersRepository.getUserByEmail(userRequest.email)
     } yield createRes)
   }
 }

@@ -28,7 +28,7 @@ abstract class WalletsRoutes extends RouteContainer {
 
   private def handleLoadByUserId(id: UUID): ZIO[Any, Nothing, Response] = {
     handleRepositoryProcess[Wallet](for {
-      loadRes <- walletsRepository.getWalletByUserId(id).to[Task]
+      loadRes <- walletsRepository.getWalletByUserId(id)
     } yield loadRes)
   }
 
@@ -45,7 +45,6 @@ abstract class WalletsRoutes extends RouteContainer {
           createWalletRequest.userId,
           createWalletRequest.walletName
         )
-        .to[Task]
     } yield createRes)
   }
 
