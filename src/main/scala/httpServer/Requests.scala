@@ -3,6 +3,8 @@ package httpServer
 import models.User
 import zio.json.{DeriveJsonDecoder, JsonDecoder}
 
+import java.util.UUID
+
 object Requests {
 
   final case class LoadUserByEmailRequest(
@@ -33,4 +35,15 @@ object Requests {
     implicit val decoder: JsonDecoder[CreateUserRequest] =
       DeriveJsonDecoder.gen[CreateUserRequest]
   }
+
+  final case class CreateWalletRequest(
+      userId: UUID,
+      walletName: String
+  )
+
+  object CreateWalletRequest {
+    implicit val decoder: JsonDecoder[CreateWalletRequest] =
+      DeriveJsonDecoder.gen[CreateWalletRequest]
+  }
+
 }

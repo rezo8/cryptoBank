@@ -44,8 +44,8 @@ object BookkeepingFixtures {
   def nextWallet(
       uuid: UUID = java.util.UUID.randomUUID(),
       userId: UUID = java.util.UUID.randomUUID(),
-      coins: Seq[UUID] = Seq()
+      walletName: String
   ): Wallet = {
-    Wallet(uuid, userId, coins)
+    Wallet(uuid, userId, walletName)
   }
 }
