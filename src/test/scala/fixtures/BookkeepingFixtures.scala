@@ -11,9 +11,7 @@ object BookkeepingFixtures {
 
   def nextTransactionValue(
       value: BigDecimal = BigDecimal(math.random())
-  ): TransactionValue = {
-    TransactionValue(value)
-  }
+  ): TransactionValue = { TransactionValue(value) }
 
   // Arguable that the inputs and outputs in this are dumb as the transaction is invalid.
   // TODO fix to guarantee random transactions validity.
