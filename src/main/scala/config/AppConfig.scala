@@ -11,9 +11,7 @@ case class AppConfig(
 case class DatabaseConfig(
     url: String,
     user: String,
-    password: String,
-    maxPoolSize: Int,
-    schema: String
+    password: String
 )
 
 class ConfigLoadException extends Exception

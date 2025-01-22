@@ -1,46 +1,21 @@
 package repository
 
 import cats.effect.*
-import config.{AppConfig, ConfigLoadException, DatabaseConfig, DerivedConfig}
-import doobie.util.transactor.Transactor
 import doobie.util.transactor.Transactor.Aux
 import fixtures.UsersFixtures
 import models.Wallet
-import pureconfig.ConfigSource
 import repository.Exceptions.{WalletAlreadyExists, WalletIsMissingByUserUUID}
 import repository.UsersRepositorySpec.suite
 import zio.ZIO
-import zio.test.{Spec, ZIOSpecDefault, assertTrue}
+import zio.test.{Spec, TestAspect, ZIOSpecDefault, assertTrue}
 
 import java.util.UUID
-import scala.concurrent.ExecutionContext
 
-object WalletsRepositorySpec extends ZIOSpecDefault {
-  implicit val ec: ExecutionContext =
-    scala.concurrent.ExecutionContext.Implicits.global
-
-  val dbConfig: DatabaseConfig = ConfigSource.default
-    .at("app")
-    .load[DerivedConfig]
-    .getOrElse(throw new ConfigLoadException())
-    .asInstanceOf[AppConfig]
-    .database
-
-  private val testTransactor: Aux[IO, Unit] =
-    Transactor.fromDriverManager[IO](
-      driver = "org.postgresql.Driver",
-      url = dbConfig.url,
-      user = dbConfig.user,
-      password = dbConfig.password,
-      logHandler = None
-    )
-
+object WalletsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
   val usersRepository: UsersRepository = new UsersRepository:
     override val transactor: Aux[IO, Unit] = testTransactor
-
-  val walletsRepository: WalletsRepository = new WalletsRepository {
+  val walletsRepository: WalletsRepository = new WalletsRepository:
     override val transactor: Aux[IO, Unit] = testTransactor
-  }
 
   def spec: Spec[Any, Throwable] = suite("WalletsRepositorySpec")(
     test("properly create and load wallet ") {
@@ -106,5 +81,6 @@ object WalletsRepositorySpec extends ZIOSpecDefault {
         ) == WalletAlreadyExists(uuid)
       })
     }
-  )
+  ) @@ TestAspect.beforeAll(initializeDb)
+    @@ TestAspect.afterAll(closeDb)
 }
