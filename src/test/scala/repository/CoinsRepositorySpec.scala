@@ -7,10 +7,9 @@ import models.CoinValue
 import org.postgresql.util.PSQLException
 import repository.CoinsRepositorySpec.coinsRepository.createCoin
 import zio.ZIO
-import zio.test.Assertion.*
 import zio.test.*
+import zio.test.Assertion.*
 
-import java.math.MathContext
 import java.util.UUID
 import scala.util.Random
 
