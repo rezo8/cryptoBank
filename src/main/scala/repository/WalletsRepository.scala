@@ -53,7 +53,7 @@ abstract class WalletsRepository {
   ): IO[UUID] =
     sql"""
       INSERT INTO wallets (ownerId, walletName)
-      VALUES (${userId}, ${walletName})
+      VALUES ($userId, $walletName)
       RETURNING id
     """.query[UUID].unique.transact(transactor)
 

@@ -7,7 +7,8 @@ import doobie.implicits.*
 import doobie.postgres.*
 import doobie.postgres.implicits.*
 import doobie.util.transactor.Transactor.Aux
-import models.{UserWithCoins, WalletCoin}
+import models.{Coin, UserWithCoins, WalletCoin}
+import repository.Exceptions.{CoinIsMissingForId, ServerException, Unexpected}
 import zio.*
 import zio.interop.catz.*
 
@@ -20,16 +21,14 @@ abstract class CoinsRepository {
   // TODO make sure that this fails on coins that add to more than 1 per wallet.
   def addCoinToWallet(
       coinId: UUID,
-      coinName: String,
       walletId: UUID,
       amount: BigDecimal
-  ): Task[Unit] = {
-    val createQueries = for {
-      _ <- createCoinSql(coinId, coinName)
-      created <- addCoinToWalletSql(coinId, walletId, amount)
-    } yield ()
+  ): Task[Int] = {
+    addCoinToWalletSql(coinId, walletId, amount).transact(transactor).to[Task]
+  }
 
-    createQueries.transact(transactor).to[Task]
+  def createCoin(coinId: UUID, coinName: String): Task[RuntimeFlags] = {
+    createCoinSql(coinId, coinName).transact(transactor).to[Task]
   }
 
   def updateCoinOwnedAmount(
@@ -43,6 +42,18 @@ abstract class CoinsRepository {
     getCoinsForWalletSql(walletId).transact(transactor).to[Task]
   }
 
+  def loadWalletCoinById(
+      coinId: Int
+  ): Task[Either[ServerException, WalletCoin]] = {
+    getWalletCoinByIdSql(coinId)
+      .transact(transactor)
+      .to[Task]
+      .fold(
+        error => { Left(Unexpected()) },
+        _.fold(Left(CoinIsMissingForId(coinId)))(Right(_))
+      )
+  }
+
   def loadCoinsForUser(userId: UUID): Task[UserWithCoins] = {
     getCoinsForUserSql(userId)
       .transact(transactor)
@@ -50,6 +61,14 @@ abstract class CoinsRepository {
         UserWithCoins(userId, walletCodes)
       })
       .to[Task]
+  }
+
+  private def getWalletCoinByIdSql(
+      coinId: Int
+  ): ConnectionIO[Option[WalletCoin]] = {
+    sql"""
+           SELECT id, coinid, walletid, amount from wallet_coins where id = $coinId
+         """.stripMargin.query[WalletCoin].option
   }
 
   private def getCoinsForWalletSql(
@@ -76,23 +95,23 @@ abstract class CoinsRepository {
   private def createCoinSql(
       coinId: UUID,
       coinName: String
-  ): ConnectionIO[UUID] = {
+  ): ConnectionIO[Int] = {
     sql"""
-         |INSERT INTO coins (coinId, coinName)
-         |VALUES ($coinId, $coinName)
-         |RETURNING id
-         |""".stripMargin.query[UUID].unique
+         |  INSERT INTO coins (coinId, coinName)
+         |  VALUES ($coinId, $coinName)
+         |""".stripMargin.update.run
   }
 
   private def addCoinToWalletSql(
       coinId: UUID,
       walletId: UUID,
       amount: BigDecimal
-  ) = {
+  ): ConnectionIO[Int] = {
     sql"""
          | INSERT INTO wallet_coins (coinId, walletId, amount)
          | VALUES ($coinId, $walletId, $amount)
-         |""".stripMargin.update.run
+         | RETURNING id
+         |""".stripMargin.query[Int].unique
   }
 
   private def updateCoinAmount(

@@ -69,7 +69,6 @@ abstract class CoinsRoutes extends RouteContainer {
       createRes <- coinsRepository
         .addCoinToWallet(
           addCoinToWallet.coinId,
-          addCoinToWallet.coinName,
           addCoinToWallet.walletId,
           addCoinToWallet.amount
         )

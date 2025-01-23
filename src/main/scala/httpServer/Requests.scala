@@ -48,7 +48,6 @@ object Requests {
 
   final case class AddCoinToWalletRequest(
       coinId: UUID,
-      coinName: String,
       walletId: UUID,
       amount: BigDecimal
   )
