@@ -9,6 +9,7 @@ import zio.ZIO
 import zio.test.Assertion.*
 import zio.test.*
 
+import java.math.MathContext
 import java.util.UUID
 import scala.util.Random
 
@@ -53,6 +54,39 @@ object CoinsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       } yield assertTrue({
         coinId == loadedWalletCoin.getOrElse(throw new Exception()).coinId
       })
+    },
+    test("can update coin owned amount") {
+      val user = UsersFixtures.nextUser()
+      val coinId = UUID.randomUUID()
+      val coinName = "Test Coin"
+      val coinValue = BigDecimal(Random.nextFloat())
+      val newValue = coinValue.-(BigDecimal(0.0001))
+      for {
+        uuidEither <- usersRepository.safeCreateUser(user)
+        userId = uuidEither.getOrElse(throw new Exception())
+        createdWallet <- walletsRepository.safeCreateWallet(
+          userId,
+          "test wallet"
+        )
+        createdWalletId <- ZIO.fromEither(createdWallet)
+        _ <- createCoin(coinId, coinName)
+        addCoinToWalletRes <- coinsRepository.addCoinToWallet(
+          coinId,
+          createdWalletId,
+          coinValue
+        )
+        _ <- coinsRepository.updateCoinOwnedAmount(
+          addCoinToWalletRes,
+          newValue
+        )
+        loadedWalletCoin <- coinsRepository.loadWalletCoinById(
+          addCoinToWalletRes
+        )
+      } yield assertTrue(
+        loadedWalletCoin
+          .getOrElse(throw Exception())
+          .amount == newValue
+      )
     },
     test(
       "should fail with PSQL exception when adding more than 1 $ worth to a coin in the DB"

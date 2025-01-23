@@ -7,7 +7,7 @@ import doobie.implicits.*
 import doobie.postgres.*
 import doobie.postgres.implicits.*
 import doobie.util.transactor.Transactor.Aux
-import models.{Coin, UserWithCoins, WalletCoin}
+import models.{Coin, TransactionValue, UserWithCoins, WalletCoin}
 import repository.Exceptions.{CoinIsMissingForId, ServerException, Unexpected}
 import zio.*
 import zio.interop.catz.*
@@ -35,7 +35,9 @@ abstract class CoinsRepository {
       coinId: Int,
       newAmount: BigDecimal
   ): Task[RuntimeFlags] = {
-    updateCoinAmount(coinId, newAmount).transact(transactor).to[Task]
+    updateWalletCoinAmount(coinId, TransactionValue(newAmount))
+      .transact(transactor)
+      .to[Task]
   }
 
   def loadCoinsForWallet(walletId: UUID): Task[List[WalletCoin]] = {
@@ -105,22 +107,22 @@ abstract class CoinsRepository {
   private def addCoinToWalletSql(
       coinId: UUID,
       walletId: UUID,
-      amount: BigDecimal
+      amount: TransactionValue
   ): ConnectionIO[Int] = {
     sql"""
          | INSERT INTO wallet_coins (coinId, walletId, amount)
-         | VALUES ($coinId, $walletId, $amount)
+         | VALUES ($coinId, $walletId, ${amount.toSatoshis})
          | RETURNING id
          |""".stripMargin.query[Int].unique
   }
 
-  private def updateCoinAmount(
+  private def updateWalletCoinAmount(
       internalId: Int,
-      newAmount: BigDecimal
+      newAmount: TransactionValue
   ) = {
     sql"""
          UPDATE wallet_coins
-         SET amount = $newAmount
+         SET amount = ${newAmount.toSatoshis}
          WHERE id = $internalId
        """.stripMargin.update.run
   }
