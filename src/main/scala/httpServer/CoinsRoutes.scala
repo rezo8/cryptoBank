@@ -2,7 +2,7 @@ package httpServer
 
 import httpServer.Helpers.handleRepositoryProcess
 import httpServer.Requests.{AddCoinToWalletRequest, UpdateCoinAmountRequest}
-import models.{UserWithCoins, WalletCoin}
+import models.{CoinValue, UserWithCoins, WalletCoin}
 import repository.CoinsRepository
 import zio.*
 import zio.http.*
@@ -51,9 +51,9 @@ abstract class CoinsRoutes extends RouteContainer {
       updateCoinAmount <- ZIO.fromEither(
         requestString.fromJson[UpdateCoinAmountRequest]
       )
-      updateRes <- coinsRepository.updateCoinOwnedAmount(
+      updateRes <- coinsRepository.updateCoinOwnedSatoshi(
         updateCoinAmount.coinId,
-        updateCoinAmount.amount
+        CoinValue(updateCoinAmount.satoshis)
       )
     } yield Right("successful update"))
   }
@@ -70,7 +70,7 @@ abstract class CoinsRoutes extends RouteContainer {
         .addCoinToWallet(
           addCoinToWallet.coinId,
           addCoinToWallet.walletId,
-          addCoinToWallet.amount
+          CoinValue(addCoinToWallet.satoshis)
         )
         .map(_ => "success")
     } yield Right(createRes))

@@ -8,7 +8,7 @@ final case class WalletCoin(
     id: Int,
     coinId: UUID,
     walletId: UUID,
-    amount: BigDecimal
+    satoshis: Long
 )
 
 object WalletCoin {

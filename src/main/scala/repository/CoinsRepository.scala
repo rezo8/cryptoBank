@@ -7,7 +7,7 @@ import doobie.implicits.*
 import doobie.postgres.*
 import doobie.postgres.implicits.*
 import doobie.util.transactor.Transactor.Aux
-import models.{Coin, TransactionValue, UserWithCoins, WalletCoin}
+import models.{CoinValue, UserWithCoins, WalletCoin}
 import repository.Exceptions.{CoinIsMissingForId, ServerException, Unexpected}
 import zio.*
 import zio.interop.catz.*
@@ -22,20 +22,24 @@ abstract class CoinsRepository {
   def addCoinToWallet(
       coinId: UUID,
       walletId: UUID,
-      amount: BigDecimal
+      coinValue: CoinValue
   ): Task[Int] = {
-    addCoinToWalletSql(coinId, walletId, amount).transact(transactor).to[Task]
+    addCoinToWalletSql(
+      coinId,
+      walletId,
+      coinValue.satoshis
+    ).transact(transactor).to[Task]
   }
 
   def createCoin(coinId: UUID, coinName: String): Task[RuntimeFlags] = {
     createCoinSql(coinId, coinName).transact(transactor).to[Task]
   }
 
-  def updateCoinOwnedAmount(
+  def updateCoinOwnedSatoshi(
       coinId: Int,
-      newAmount: BigDecimal
+      coinValue: CoinValue
   ): Task[RuntimeFlags] = {
-    updateWalletCoinAmount(coinId, TransactionValue(newAmount))
+    updateWalletCoinSatoshi(coinId, coinValue.satoshis)
       .transact(transactor)
       .to[Task]
   }
@@ -69,7 +73,7 @@ abstract class CoinsRepository {
       coinId: Int
   ): ConnectionIO[Option[WalletCoin]] = {
     sql"""
-           SELECT id, coinid, walletid, amount from wallet_coins where id = $coinId
+           SELECT id, coinid, walletid, satoshis from wallet_coins where id = $coinId
          """.stripMargin.query[WalletCoin].option
   }
 
@@ -107,22 +111,22 @@ abstract class CoinsRepository {
   private def addCoinToWalletSql(
       coinId: UUID,
       walletId: UUID,
-      amount: TransactionValue
+      satoshis: Long
   ): ConnectionIO[Int] = {
     sql"""
-         | INSERT INTO wallet_coins (coinId, walletId, amount)
-         | VALUES ($coinId, $walletId, ${amount.toSatoshis})
+         | INSERT INTO wallet_coins (coinId, walletId, satoshis)
+         | VALUES ($coinId, $walletId, $satoshis)
          | RETURNING id
          |""".stripMargin.query[Int].unique
   }
 
-  private def updateWalletCoinAmount(
+  private def updateWalletCoinSatoshi(
       internalId: Int,
-      newAmount: TransactionValue
+      newSatoshi: Long
   ) = {
     sql"""
          UPDATE wallet_coins
-         SET amount = ${newAmount.toSatoshis}
+         SET satoshis = $newSatoshi
          WHERE id = $internalId
        """.stripMargin.update.run
   }

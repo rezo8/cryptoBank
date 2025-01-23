@@ -3,6 +3,7 @@ package repository
 import cats.effect.*
 import doobie.util.transactor.Transactor.Aux
 import fixtures.UsersFixtures
+import models.CoinValue
 import org.postgresql.util.PSQLException
 import repository.CoinsRepositorySpec.coinsRepository.createCoin
 import zio.ZIO
@@ -33,7 +34,7 @@ object CoinsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       val user = UsersFixtures.nextUser()
       val coinId = UUID.randomUUID()
       val coinName = "Test Coin"
-      val coinValue = BigDecimal(Random.nextFloat())
+      val coinValue = CoinValue.apply(Random.between(0L, 10_000_000L))
       for {
         uuidEither <- usersRepository.safeCreateUser(user)
         userId = uuidEither.getOrElse(throw new Exception())
@@ -59,8 +60,8 @@ object CoinsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       val user = UsersFixtures.nextUser()
       val coinId = UUID.randomUUID()
       val coinName = "Test Coin"
-      val coinValue = BigDecimal(Random.nextFloat())
-      val newValue = coinValue.-(BigDecimal(0.0001))
+      val coinValue = CoinValue.apply(Random.between(0L, 10_000_000L))
+      val newValue = CoinValue(coinValue.satoshis - 1L)
       for {
         uuidEither <- usersRepository.safeCreateUser(user)
         userId = uuidEither.getOrElse(throw new Exception())
@@ -75,7 +76,7 @@ object CoinsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
           createdWalletId,
           coinValue
         )
-        _ <- coinsRepository.updateCoinOwnedAmount(
+        _ <- coinsRepository.updateCoinOwnedSatoshi(
           addCoinToWalletRes,
           newValue
         )
@@ -85,7 +86,7 @@ object CoinsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       } yield assertTrue(
         loadedWalletCoin
           .getOrElse(throw Exception())
-          .amount == newValue
+          .satoshis == newValue.satoshis
       )
     },
     test(
@@ -94,8 +95,8 @@ object CoinsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       val user = UsersFixtures.nextUser()
       val coinId = UUID.randomUUID()
       val coinName = "Test Coin"
-      val coinValue = BigDecimal(Random.nextFloat())
-      val overflowValue = BigDecimal(100).+(coinValue)
+      val coinValue = CoinValue.apply(Random.between(0L, 100_000_000L))
+      val overflowValue = CoinValue(100_000_000L - coinValue.satoshis + 2)
       for {
         uuidEither <- usersRepository.safeCreateUser(user)
         userId = uuidEither.getOrElse(throw new Exception())
@@ -129,7 +130,7 @@ object CoinsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       val res = usersRepository.safeCreateUser(user)
       val coinId = UUID.randomUUID()
       val coinName = "Test Coin"
-      val coinValue = BigDecimal(Random.nextFloat())
+      val coinValue = CoinValue.apply(Random.between(0L, 10_000_000L))
 
       for {
         uuidEither <- usersRepository.safeCreateUser(user)
