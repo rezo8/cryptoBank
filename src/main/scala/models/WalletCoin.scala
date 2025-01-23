@@ -1,0 +1,19 @@
+package models
+
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+
+import java.util.UUID
+
+final case class WalletCoin(
+    id: Int,
+    coinId: UUID,
+    walletId: UUID,
+    amount: BigDecimal
+)
+
+object WalletCoin {
+  implicit val decoder: JsonDecoder[WalletCoin] =
+    DeriveJsonDecoder.gen[WalletCoin]
+  implicit val encoder: JsonEncoder[WalletCoin] =
+    DeriveJsonEncoder.gen[WalletCoin]
+}
