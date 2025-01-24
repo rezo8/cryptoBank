@@ -1,14 +1,12 @@
 package httpServer
 
-import cats.effect.unsafe.implicits.global
 import httpServer.Helpers.handleRepositoryProcess
-import httpServer.Requests.{CreateUserRequest, LoadUserByEmailRequest}
+import httpServer.Requests.CreateUserRequest
+import httpServer.Responses.LoadUserResponse
 import models.User
-import models.User.encoder
 import repository.UsersRepository
 import zio.*
 import zio.http.*
-import zio.interop.catz.*
 import zio.json.*
 
 import java.util
@@ -31,34 +29,35 @@ abstract class UserRoutes extends RouteContainer {
   )
 
   private def handleLoadByEmail(email: String): ZIO[Any, Nothing, Response] = {
-    handleRepositoryProcess[User](for {
-      loadRes <- usersRepository.getUserByEmail(email)
-    } yield loadRes)
+    handleRepositoryProcess[LoadUserResponse](for {
+      loadRes <- usersRepository
+        .getUserByEmail(email)
+    } yield loadRes.map(LoadUserResponse.fromUser))
   }
 
   private def handleLoadById(id: UUID): ZIO[Any, Nothing, Response] = {
-    handleRepositoryProcess[User](for {
-      loadRes <- usersRepository.getUser(id)
-    } yield loadRes)
+    handleRepositoryProcess[LoadUserResponse](for {
+      loadRes <- usersRepository
+        .getUser(id)
+    } yield loadRes.map(LoadUserResponse.fromUser))
   }
 
   private def handleCreateUser(
       req: Request
   ): ZIO[Any, Nothing, Response] = {
-    handleRepositoryProcess[UUID](for {
+    handleRepositoryProcess[LoadUserResponse](for {
       userBodyString <- req.body.asString
       userRequest <- ZIO.fromEither(userBodyString.fromJson[CreateUserRequest])
-      createRes <- usersRepository.safeCreateUser(userRequest.toUser())
-    } yield createRes)
-  }
-
-  private def loadUserByEmail(req: Request): ZIO[Any, Nothing, Response] = {
-    handleRepositoryProcess[User](for {
-      userBodyString <- req.body.asString
-      userRequest <- ZIO.fromEither(
-        userBodyString.fromJson[LoadUserByEmailRequest]
+      createRes <- usersRepository
+        .safeCreateUser(userRequest.toUser())
+    } yield createRes.map(userId => {
+      LoadUserResponse(
+        Some(userId),
+        userRequest.firstName,
+        userRequest.lastName,
+        userRequest.email,
+        userRequest.phoneNumber
       )
-      createRes <- usersRepository.getUserByEmail(userRequest.email)
-    } yield createRes)
+    }))
   }
 }

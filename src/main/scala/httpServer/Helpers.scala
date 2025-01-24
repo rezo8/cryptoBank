@@ -1,12 +1,13 @@
 package httpServer
 
+import httpServer.Responses.ServerResponse
 import repository.Exceptions.ServerException
 import zio.*
 import zio.http.*
 import zio.json.*
 
 object Helpers {
-  def handleRepositoryProcess[A](
+  def handleRepositoryProcess[A <: ServerResponse](
       repoProc: ZIO[Any, Serializable, Either[ServerException, A]]
   )(implicit enc: zio.json.JsonEncoder[A]): ZIO[Any, Nothing, Response] = {
     repoProc.fold(

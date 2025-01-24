@@ -1,13 +1,12 @@
 package httpServer
 
-import cats.effect.unsafe.implicits.global
 import httpServer.Helpers.handleRepositoryProcess
 import httpServer.Requests.CreateWalletRequest
+import httpServer.Responses.{CreateWalletResponse, LoadWalletResponse}
 import models.Wallet
 import repository.WalletsRepository
 import zio.*
 import zio.http.*
-import zio.interop.catz.*
 import zio.json.*
 
 import java.util
@@ -27,15 +26,15 @@ abstract class WalletsRoutes extends RouteContainer {
   )
 
   private def handleLoadByUserId(id: UUID): ZIO[Any, Nothing, Response] = {
-    handleRepositoryProcess[Wallet](for {
+    handleRepositoryProcess[LoadWalletResponse](for {
       loadRes <- walletsRepository.getWalletByUserId(id)
-    } yield loadRes)
+    } yield loadRes.map(LoadWalletResponse.fromWallet))
   }
 
   private def handleCreateWallet(
       req: Request
   ): ZIO[Any, Nothing, Response] = {
-    handleRepositoryProcess[UUID](for {
+    handleRepositoryProcess[CreateWalletResponse](for {
       userBodyString <- req.body.asString
       createWalletRequest <- ZIO.fromEither(
         userBodyString.fromJson[CreateWalletRequest]
@@ -45,7 +44,7 @@ abstract class WalletsRoutes extends RouteContainer {
           createWalletRequest.userId,
           createWalletRequest.walletName
         )
-    } yield createRes)
+    } yield createRes.map(walletId => CreateWalletResponse(walletId)))
   }
 
 }
