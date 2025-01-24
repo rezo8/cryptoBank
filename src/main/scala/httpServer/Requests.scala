@@ -46,21 +46,21 @@ object Requests {
       DeriveJsonDecoder.gen[CreateWalletRequest]
   }
 
-  final case class AddCoinToWalletRequest(
-      coinId: UUID,
-      walletId: UUID,
-      satoshis: Long
-  )
+  final case class CreateCoinRequest(coinId: UUID, coinName: String)
+
+  object CreateCoinRequest {
+    implicit val decoder: JsonDecoder[CreateCoinRequest] =
+      DeriveJsonDecoder.gen[CreateCoinRequest]
+  }
+
+  final case class AddCoinToWalletRequest(satoshis: Long)
 
   object AddCoinToWalletRequest {
     implicit val decoder: JsonDecoder[AddCoinToWalletRequest] =
       DeriveJsonDecoder.gen[AddCoinToWalletRequest]
   }
 
-  final case class UpdateCoinAmountRequest(
-      coinId: Int,
-      satoshis: Long
-  )
+  final case class UpdateCoinAmountRequest(satoshis: Long)
 
   object UpdateCoinAmountRequest {
     implicit val decoder: JsonDecoder[UpdateCoinAmountRequest] =

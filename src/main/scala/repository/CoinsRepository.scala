@@ -31,6 +31,7 @@ abstract class CoinsRepository {
     ).transact(transactor).to[Task]
   }
 
+  // TODO remove the create coin concept. Coins exist outside and are attributed to wallets.
   def createCoin(coinId: UUID, coinName: String): Task[RuntimeFlags] = {
     createCoinSql(coinId, coinName).transact(transactor).to[Task]
   }
@@ -91,10 +92,10 @@ abstract class CoinsRepository {
     sql"""
         SELECT wc.*
         FROM users u
-        JOIN wallets w ON u.user_id = w.user_id
-        JOIN wallet_coins wc ON w.wallet_id = wc.wallet_id
-        JOIN coins c ON wc.coin_id = c.coin_id
-        WHERE u.user_id = $userId
+        JOIN wallets w ON u.id = w.ownerId
+        JOIN wallet_coins wc ON w.id = wc.walletId
+        JOIN coins c ON wc.coinId = c.coinId
+        WHERE u.id = $userId
       """.query[WalletCoin].to[List]
   }
 

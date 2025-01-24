@@ -42,7 +42,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "localhost:8080/users/id/b758dab1-b76f-41df-820a-8062b28e4f0a",
+							"raw": "localhost:8080/users/id/fba19caf-29e6-4b53-be85-d5606fc6fad4",
 							"host": [
 								"localhost"
 							],
@@ -50,7 +50,293 @@
 							"path": [
 								"users",
 								"id",
-								"b758dab1-b76f-41df-820a-8062b28e4f0a"
+								"fba19caf-29e6-4b53-be85-d5606fc6fad4"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User By Email",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/users/email/test@gmail.com",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"users",
+								"email",
+								"test@gmail.com"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Wallets",
+			"item": [
+				{
+					"name": "Add Wallet",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": \"fba19caf-29e6-4b53-be85-d5606fc6fad4\",\n    \"walletName\": \"testWallet\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/wallets",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"wallets"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "409 Add Wallet",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"userId\": \"fba19caf-29e6-4b53-be85-d5606fc6fad4\",\n    \"walletName\": \"testWallet\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "localhost:8080/wallets",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"wallets"
+									]
+								}
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				},
+				{
+					"name": "Get Wallet By ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/wallets/userId/fba19caf-29e6-4b53-be85-d5606fc6fac4",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"wallets",
+								"userId",
+								"fba19caf-29e6-4b53-be85-d5606fc6fac4"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "404 Get Wallet By UserID",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "localhost:8080/wallets/userId/fba19caf-29e6-4b53-be85-d5606fc6fac4",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"wallets",
+										"userId",
+										"fba19caf-29e6-4b53-be85-d5606fc6fac4"
+									]
+								}
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": null
+						},
+						{
+							"name": "200 Get Wallet By UserId",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "localhost:8080/wallets/userId/fba19caf-29e6-4b53-be85-d5606fc6fad4",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"wallets",
+										"userId",
+										"fba19caf-29e6-4b53-be85-d5606fc6fad4"
+									]
+								}
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Coins",
+			"item": [
+				{
+					"name": "Create Coin",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"coinId\": \"{{$guid}}\",\n    \"coinName\" : \"Test Coin\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/coins",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"coins"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Coins for User",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"ribhi\",\n    \"lastName\": \"el-zaru\",\n    \"email\": \"test@gmail.com\",\n    \"phoneNumber\": \"6175997874\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/coins/userId/fba19caf-29e6-4b53-be85-d5606fc6fad4",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"coins",
+								"userId",
+								"fba19caf-29e6-4b53-be85-d5606fc6fad4"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Coin To Wallet",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"satoshis\": 500\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/coins/coinId/9f4b3e05-cf46-40e2-9b57-5de902de0684/walletId/51716a9b-1b5b-462d-a157-fc11e0096c2c",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"coins",
+								"coinId",
+								"9f4b3e05-cf46-40e2-9b57-5de902de0684",
+								"walletId",
+								"51716a9b-1b5b-462d-a157-fc11e0096c2c"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update coin value",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"satoshis\": 50\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/coins/walletCoinId/4",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"coins",
+								"walletCoinId",
+								"4"
 							]
 						}
 					},

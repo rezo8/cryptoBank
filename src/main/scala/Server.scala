@@ -10,9 +10,9 @@ import _root_.config.{
 import doobie.*
 import doobie.util.transactor.Transactor
 import doobie.util.transactor.Transactor.Aux
-import httpServer.{BaseServer, UserRoutes, WalletsRoutes}
+import httpServer.{BaseServer, CoinsRoutes, UserRoutes, WalletsRoutes}
 import pureconfig.ConfigSource
-import repository.{UsersRepository, WalletsRepository}
+import repository.{CoinsRepository, UsersRepository, WalletsRepository}
 import zio.*
 
 import scala.concurrent.ExecutionContext
@@ -37,6 +37,10 @@ object Server extends ZIOAppDefault with DbMigrationComponent with BaseServer {
     )
 
   // Repositories
+  private val coinsRepository = new CoinsRepository {
+    override val transactor: Aux[IO, Unit] = main.transactor
+  }
+
   private val usersRepository = new UsersRepository:
     override val transactor: Aux[effect.IO, Unit] = main.transactor
 
@@ -44,6 +48,11 @@ object Server extends ZIOAppDefault with DbMigrationComponent with BaseServer {
     override val transactor: Aux[effect.IO, Unit] = main.transactor
 
   // Routes
+  override val coinsRoutes: CoinsRoutes = new CoinsRoutes:
+    override val coinsRepository: CoinsRepository = main.coinsRepository
+    override implicit val ec: ExecutionContext =
+      scala.concurrent.ExecutionContext.Implicits.global
+
   override val userRoutes: UserRoutes = new UserRoutes:
     override implicit val ec: ExecutionContext =
       scala.concurrent.ExecutionContext.Implicits.global
