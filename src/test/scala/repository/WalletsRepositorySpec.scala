@@ -38,19 +38,8 @@ object WalletsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
         )
       )
     },
-    test("should fail when wallet does not exist for a user") {
-      val user = UsersFixtures.nextUser()
-      val res = usersRepository.safeCreateUser(user)
-
-      for {
-        uuidEither <- usersRepository.safeCreateUser(user)
-        uuid = uuidEither.getOrElse(throw new Exception())
-        loadedUserEither <- usersRepository.getUserByEmail(user.email)
-        loadedUser <- ZIO.fromEither(loadedUserEither)
-      } yield assertTrue(user.copy(id = Some(uuid)) == loadedUser)
-    },
     test(
-      "fails with WalletIsMissingByUserUUID when creating a user with duplicate email"
+      "fails with WalletIsMissingByUserUUID wallet does not exist"
     ) {
       val randomId = UUID.randomUUID()
       for {
@@ -62,7 +51,7 @@ object WalletsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       })
     },
     test(
-      "not be able to create two wallets for a user"
+      "fails with WalletAlreadyExists when trying to create two wallets for a user"
     ) {
       val user = UsersFixtures.nextUser()
       val randomId = UUID.randomUUID()

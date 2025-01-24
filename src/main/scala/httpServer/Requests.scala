@@ -1,6 +1,6 @@
 package httpServer
 
-import models.User
+import models.{CoinValue, User}
 import zio.json.{DeriveJsonDecoder, JsonDecoder}
 
 import java.util.UUID
@@ -46,4 +46,24 @@ object Requests {
       DeriveJsonDecoder.gen[CreateWalletRequest]
   }
 
+  final case class AddCoinToWalletRequest(
+      coinId: UUID,
+      walletId: UUID,
+      satoshis: Long
+  )
+
+  object AddCoinToWalletRequest {
+    implicit val decoder: JsonDecoder[AddCoinToWalletRequest] =
+      DeriveJsonDecoder.gen[AddCoinToWalletRequest]
+  }
+
+  final case class UpdateCoinAmountRequest(
+      coinId: Int,
+      satoshis: Long
+  )
+
+  object UpdateCoinAmountRequest {
+    implicit val decoder: JsonDecoder[UpdateCoinAmountRequest] =
+      DeriveJsonDecoder.gen[UpdateCoinAmountRequest]
+  }
 }

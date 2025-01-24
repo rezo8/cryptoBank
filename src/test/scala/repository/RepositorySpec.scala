@@ -9,6 +9,8 @@ import org.flywaydb.core.api.output.MigrateResult
 import org.testcontainers.containers.PostgreSQLContainer
 import zio.ZIO
 
+// TODO consider creating an extendable clean and setup method so that we can run them after and before each test.
+// Will keep DB clean and DRY up code by allowing dependent db elements to be set up.
 trait RepositorySpec extends DbMigrationComponent {
 
   private val container = new PostgreSQLContainer("postgres:latest")
