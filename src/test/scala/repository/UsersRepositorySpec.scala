@@ -15,10 +15,15 @@ object UsersRepositorySpec extends ZIOSpecDefault with RepositorySpec {
   def spec: Spec[Any, Throwable] = suite("UsersRepositorySpec")(
     test("properly create and load user by id") {
       val user = UsersFixtures.nextUser()
-      val res = usersRepository.safeCreateUser(user)
-
       for {
-        uuidEither <- usersRepository.safeCreateUser(user)
+        uuidEither <- usersRepository.safeCreateUser(
+          user.userTypeId,
+          user.firstName,
+          user.lastName,
+          user.email,
+          user.phoneNumber,
+          user.passwordHash
+        )
         uuid = uuidEither.getOrElse(throw new Exception())
         loadedUserEither <- usersRepository.getUser(uuid)
         loadedUser <- ZIO.fromEither(loadedUserEither)
@@ -27,10 +32,15 @@ object UsersRepositorySpec extends ZIOSpecDefault with RepositorySpec {
     test("properly create and load user by email") {
       val user = UsersFixtures.nextUser()
 
-      val res = usersRepository.safeCreateUser(user)
-
       for {
-        uuidEither <- usersRepository.safeCreateUser(user)
+        uuidEither <- usersRepository.safeCreateUser(
+          user.userTypeId,
+          user.firstName,
+          user.lastName,
+          user.email,
+          user.phoneNumber,
+          user.passwordHash
+        )
         uuid = uuidEither.getOrElse(throw new Exception())
         loadedUserEither <- usersRepository.getUserByEmail(user.email)
         loadedUser <- ZIO.fromEither(loadedUserEither)
@@ -44,8 +54,22 @@ object UsersRepositorySpec extends ZIOSpecDefault with RepositorySpec {
         user.copy(phoneNumber = UsersFixtures.nextPhoneNumber())
 
       for {
-        createOne <- usersRepository.safeCreateUser(user)
-        createTwo <- usersRepository.safeCreateUser(duplicateUser)
+        createOne <- usersRepository.safeCreateUser(
+          user.userTypeId,
+          user.firstName,
+          user.lastName,
+          user.email,
+          user.phoneNumber,
+          user.passwordHash
+        )
+        createTwo <- usersRepository.safeCreateUser(
+          duplicateUser.userTypeId,
+          duplicateUser.firstName,
+          duplicateUser.lastName,
+          duplicateUser.email,
+          duplicateUser.phoneNumber,
+          duplicateUser.passwordHash
+        )
       } yield assertTrue({
         val error = createTwo.left
         error.getOrElse(throw new Exception()) == UserAlreadyExists()

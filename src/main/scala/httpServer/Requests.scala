@@ -1,6 +1,7 @@
 package httpServer
 
-import models.{CoinValue, User}
+import models.{CoinValue, User, UserType}
+import org.mindrot.jbcrypt.BCrypt
 import zio.json.{DeriveJsonDecoder, JsonDecoder}
 
 import java.util.UUID
@@ -14,22 +15,16 @@ object Requests {
     implicit val decoder: JsonDecoder[LoadUserByEmailRequest] =
       DeriveJsonDecoder.gen[LoadUserByEmailRequest]
   }
+
+  // TODO send the password hash into the request, not the raw pw.
   final case class CreateUserRequest(
+      userType: String,
       firstName: String,
       lastName: String,
       email: String,
-      phoneNumber: String
-  ) {
-    def toUser(): User = {
-      User(
-        id = None,
-        firstName = firstName,
-        lastName = lastName,
-        email = email,
-        phoneNumber = phoneNumber
-      )
-    }
-  }
+      phoneNumber: String,
+      password: String
+  )
 
   object CreateUserRequest {
     implicit val decoder: JsonDecoder[CreateUserRequest] =

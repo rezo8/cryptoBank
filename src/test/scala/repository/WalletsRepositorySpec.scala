@@ -5,7 +5,7 @@ import doobie.util.transactor.Transactor.Aux
 import fixtures.UsersFixtures
 import models.Wallet
 import repository.Exceptions.{WalletAlreadyExists, WalletIsMissingByUserUUID}
-import repository.UsersRepositorySpec.suite
+import repository.UsersRepositorySpec.{suite, usersRepository}
 import zio.ZIO
 import zio.test.{Spec, TestAspect, ZIOSpecDefault, assertTrue}
 
@@ -21,7 +21,14 @@ object WalletsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
     test("properly create and load wallet ") {
       val user = UsersFixtures.nextUser()
       for {
-        uuidEither <- usersRepository.safeCreateUser(user)
+        uuidEither <- usersRepository.safeCreateUser(
+          user.userTypeId,
+          user.firstName,
+          user.lastName,
+          user.email,
+          user.phoneNumber,
+          user.passwordHash
+        )
         userId = uuidEither.getOrElse(throw new Exception())
         createdWallet <- walletsRepository.safeCreateWallet(
           userId,
@@ -56,7 +63,14 @@ object WalletsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       val user = UsersFixtures.nextUser()
       val randomId = UUID.randomUUID()
       for {
-        uuidEither <- usersRepository.safeCreateUser(user)
+        uuidEither <- usersRepository.safeCreateUser(
+          user.userTypeId,
+          user.firstName,
+          user.lastName,
+          user.email,
+          user.phoneNumber,
+          user.passwordHash
+        )
         uuid = uuidEither.getOrElse(throw new Exception())
         createdWallet <- walletsRepository.safeCreateWallet(uuid, "test wallet")
         loadedWallet <- walletsRepository.getWalletByUserId(uuid)

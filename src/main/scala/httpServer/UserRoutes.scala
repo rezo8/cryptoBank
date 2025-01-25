@@ -3,7 +3,8 @@ package httpServer
 import httpServer.Helpers.handleRepositoryProcess
 import httpServer.Requests.CreateUserRequest
 import httpServer.Responses.LoadUserResponse
-import models.User
+import models.{User, UserType}
+import org.mindrot.jbcrypt.BCrypt
 import repository.UsersRepository
 import zio.*
 import zio.http.*
@@ -49,7 +50,14 @@ abstract class UserRoutes extends RouteContainer {
       userBodyString <- req.body.asString
       userRequest <- ZIO.fromEither(userBodyString.fromJson[CreateUserRequest])
       createRes <- usersRepository
-        .safeCreateUser(userRequest.toUser())
+        .safeCreateUser(
+          userTypeId = UserType.intFromString(userRequest.userType),
+          firstName = userRequest.firstName,
+          lastName = userRequest.lastName,
+          email = userRequest.email,
+          phoneNumber = userRequest.phoneNumber,
+          passwordHash = BCrypt.hashpw(userRequest.password, BCrypt.gensalt())
+        )
     } yield createRes.map(userId => {
       LoadUserResponse(
         Some(userId),

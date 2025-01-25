@@ -20,9 +20,21 @@ abstract class UsersRepository {
   val transactor: Aux[IO, Unit]
 
   def safeCreateUser(
-      user: User
+      userTypeId: Int,
+      firstName: String,
+      lastName: String,
+      email: String,
+      phoneNumber: String,
+      passwordHash: String
   ): Task[Either[ServerException, UUID]] = {
-    createUser(user)
+    createUser(
+      userTypeId,
+      firstName,
+      lastName,
+      email,
+      phoneNumber,
+      passwordHash
+    )
       .attemptSomeSqlState {
         case sqlstate.class23.UNIQUE_VIOLATION => UserAlreadyExists()
         case _                                 => Unexpected()
@@ -33,7 +45,7 @@ abstract class UsersRepository {
   // Load user by ID
   def getUser(id: UUID): Task[Either[ServerException, User]] =
     sql"""
-      SELECT id, firstName, lastName, email, phoneNumber, created_at
+      SELECT id, userTypeId, firstName, lastName, email, phoneNumber, passwordHash, created_at, updatedAt
       FROM users
       WHERE id = $id
     """
@@ -52,7 +64,7 @@ abstract class UsersRepository {
   // Load user by ID
   def getUserByEmail(email: String): Task[Either[ServerException, User]] =
     sql"""
-      SELECT id, firstName, lastName, email, phoneNumber, created_at
+      SELECT id, userTypeId, firstName, lastName, email, phoneNumber, passwordHash, created_at, updatedAt
       FROM users
       WHERE email = $email
     """
@@ -70,11 +82,16 @@ abstract class UsersRepository {
 
   // Insert user
   private def createUser(
-      user: User
+      userTypeId: Int,
+      firstName: String,
+      lastName: String,
+      email: String,
+      phoneNumber: String,
+      passwordHash: String
   ): IO[UUID] =
     sql"""
-      INSERT INTO users (firstName, lastName, email, phoneNumber)
-      VALUES (${user.firstName}, ${user.lastName}, ${user.email}, ${user.phoneNumber})
+      INSERT INTO users (firstName, userTypeId, firstName, lastName, email, phoneNumber, passwordHash, created_at, updatedAt)
+      VALUES (${firstName}, ${lastName}, ${email}, ${phoneNumber})
       RETURNING id
     """.query[UUID].unique.transact(transactor)
 

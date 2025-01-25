@@ -1,25 +1,41 @@
 package fixtures
 
-import models.User
+import models.{User, UserType}
 
+import java.time.Instant
 import java.util.UUID
 import scala.util.Random
 
 object UsersFixtures {
 
+  def nextUserType(): UserType = {
+    UserType.IdToUserTypeMap.getOrElse(
+      Random.nextInt(3) + 1,
+      throw new Exception()
+    )
+  }
+
   def nextUser(
       id: Option[UUID] = Some(UUID.randomUUID()),
+      userTypeId: Int = nextUserType().userTypeId,
       firstName: String = new String(Random.alphanumeric.take(10).toArray),
       lastName: String = new String(Random.alphanumeric.take(10).toArray),
       email: String = nextEmail(),
-      phoneNumber: String = nextPhoneNumber()
+      phoneNumber: String = nextPhoneNumber(),
+      passwordHash: String = "test",
+      createdAt: Instant = Instant.now(),
+      updatedAt: Instant = Instant.now()
   ): User = {
     User(
       id = id,
+      userTypeId = userTypeId,
       firstName = firstName,
       lastName = lastName,
       email = email,
-      phoneNumber = phoneNumber
+      phoneNumber = phoneNumber,
+      passwordHash = passwordHash,
+      createdAt = createdAt,
+      updatedAt = updatedAt
     )
   }
 

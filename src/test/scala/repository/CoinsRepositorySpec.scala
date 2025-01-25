@@ -6,6 +6,7 @@ import fixtures.UsersFixtures
 import models.CoinValue
 import org.postgresql.util.PSQLException
 import repository.CoinsRepositorySpec.coinsRepository.createCoin
+import repository.UsersRepositorySpec.usersRepository
 import zio.ZIO
 import zio.test.*
 import zio.test.Assertion.*
@@ -35,7 +36,14 @@ object CoinsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       val coinName = "Test Coin"
       val coinValue = CoinValue.apply(Random.between(0L, 10_000_000L))
       for {
-        uuidEither <- usersRepository.safeCreateUser(user)
+        uuidEither <- usersRepository.safeCreateUser(
+          user.userTypeId,
+          user.firstName,
+          user.lastName,
+          user.email,
+          user.phoneNumber,
+          user.passwordHash
+        )
         userId = uuidEither.getOrElse(throw new Exception())
         createdWallet <- walletsRepository.safeCreateWallet(
           userId,
@@ -62,7 +70,14 @@ object CoinsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       val coinValue = CoinValue.apply(Random.between(0L, 10_000_000L))
       val newValue = CoinValue(coinValue.satoshis - 1L)
       for {
-        uuidEither <- usersRepository.safeCreateUser(user)
+        uuidEither <- usersRepository.safeCreateUser(
+          user.userTypeId,
+          user.firstName,
+          user.lastName,
+          user.email,
+          user.phoneNumber,
+          user.passwordHash
+        )
         userId = uuidEither.getOrElse(throw new Exception())
         createdWallet <- walletsRepository.safeCreateWallet(
           userId,
@@ -97,7 +112,14 @@ object CoinsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       val coinValue = CoinValue.apply(Random.between(0L, 100_000_000L))
       val overflowValue = CoinValue(100_000_000L - coinValue.satoshis + 2)
       for {
-        uuidEither <- usersRepository.safeCreateUser(user)
+        uuidEither <- usersRepository.safeCreateUser(
+          user.userTypeId,
+          user.firstName,
+          user.lastName,
+          user.email,
+          user.phoneNumber,
+          user.passwordHash
+        )
         userId = uuidEither.getOrElse(throw new Exception())
         createdWallet <- walletsRepository.safeCreateWallet(
           userId,
@@ -126,13 +148,19 @@ object CoinsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
     },
     test("should fail when wallet does not exist") {
       val user = UsersFixtures.nextUser()
-      val res = usersRepository.safeCreateUser(user)
       val coinId = UUID.randomUUID()
       val coinName = "Test Coin"
       val coinValue = CoinValue.apply(Random.between(0L, 10_000_000L))
 
       for {
-        uuidEither <- usersRepository.safeCreateUser(user)
+        uuidEither <- usersRepository.safeCreateUser(
+          user.userTypeId,
+          user.firstName,
+          user.lastName,
+          user.email,
+          user.phoneNumber,
+          user.passwordHash
+        )
         userId = uuidEither.getOrElse(throw new Exception())
         addCoinToWalletRes <- coinsRepository
           .addCoinToWallet(
