@@ -6,21 +6,46 @@ This project is a basic bank simulator with the purpose of storing fake "bitcoin
 
 It handles deposits, returns and transfers, both intra and inter bank.
 
-This is a basic bank that does not operate in the real "banking" world. 
+This is a basic bank that does not operate in the real "banking" world.
 
 The goal long term is not just to store internal transfers, but also to populate a transfer ledger to closer simulate Crypto Blockchain operations.
 
 ### Usage
 
-This project has a database dependency. To run it, you need docker installed with a postgres image downloaded.
+#### Running in Docker
 
-Then, run: docker run --name postgres-container -e POSTGRES_USER=myuser -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=postgres -p 5432:5432 -d postgres
+**Requirements:**
 
-Afterwards, the app is set up for application.conf to work. 
-Feel free to edit variables as necessary to suit your usecase.
+1. Docker :D
 
-Once that is set up, `sbt compile` and `sbt run`  will start the service.
+**Commands to Run from project dir (i.e., `bitcoin/`):**
 
-SBT can be installed with brew.
+`docker-compose up`
 
-NOTE: Trying to move to a containerized version so people don't need to download sbt.
+If running into issues, reset by running:
+
+`docker-compose down -v`
+
+#### Running Locally
+
+**Requirements:**
+
+1. Docker
+2. Flyway
+3. SBT
+
+**Commands to Run from project dir (i.e., `bitcoin/`):**
+
+1. Start PostgreSQL container:
+   `docker run --name postgres-container -e POSTGRES_USER=myuser -e POSTGRES_PASSWORD=mypassword -e POSTGRES_DB=postgres -p 5432:5432 -d postgres`
+
+2. Run Flyway migrations:
+   `flyway migrate -configFiles=./flyway/flyway.conf`
+
+3. Compile the project:
+   `sbt compile`
+
+4. Run the application:
+   `sbt run`
+
+Enjoy!
