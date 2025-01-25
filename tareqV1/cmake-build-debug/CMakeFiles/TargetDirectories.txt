@@ -1,0 +1,3 @@
+/Users/tareq/CLionProjects/tareqV1/cmake-build-debug/CMakeFiles/tareqV1.dir
+/Users/tareq/CLionProjects/tareqV1/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/tareq/CLionProjects/tareqV1/cmake-build-debug/CMakeFiles/rebuild_cache.dir
