@@ -1,7 +1,6 @@
 package repository
 
 import cats.effect.IO
-import components.DbMigrationComponent
 import config.DatabaseConfig
 import doobie.util.transactor.Transactor
 import doobie.util.transactor.Transactor.Aux
