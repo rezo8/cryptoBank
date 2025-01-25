@@ -1,12 +1,11 @@
-import cats.effect
-import cats.effect.IO
-import components.DbMigrationComponent
 import _root_.config.{
   AppConfig,
   ConfigLoadException,
   DatabaseConfig,
   DerivedConfig
 }
+import cats.effect
+import cats.effect.IO
 import doobie.*
 import doobie.util.transactor.Transactor
 import doobie.util.transactor.Transactor.Aux
@@ -17,7 +16,7 @@ import zio.*
 
 import scala.concurrent.ExecutionContext
 
-object Server extends ZIOAppDefault with DbMigrationComponent with BaseServer {
+object Server extends ZIOAppDefault with BaseServer {
   main =>
 
   val config: AppConfig = ConfigSource.default
@@ -26,13 +25,12 @@ object Server extends ZIOAppDefault with DbMigrationComponent with BaseServer {
     .getOrElse(throw new ConfigLoadException())
     .asInstanceOf[AppConfig]
 
-  override val dbConfig: DatabaseConfig = config.database
   private val transactor =
     Transactor.fromDriverManager[IO](
       driver = "org.postgresql.Driver",
-      url = dbConfig.url,
-      user = dbConfig.user,
-      password = dbConfig.password,
+      url = config.database.url,
+      user = config.database.user,
+      password = config.database.password,
       logHandler = None
     )
 
@@ -65,7 +63,6 @@ object Server extends ZIOAppDefault with DbMigrationComponent with BaseServer {
 
   private def appLogic: ZIO[Any, Throwable, Nothing] = {
     for {
-      a <- this.flyWayInitialize()
       serverProc <- startServer
     } yield serverProc
   }

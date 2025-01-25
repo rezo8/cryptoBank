@@ -1,6 +1,11 @@
-val scala3Version = "3.6.2"
+import sbtassembly.MergeStrategy
+import sbtassembly.PathList
 
+val scala3Version = "3.6.2"
 val zioVersion = "2.1.14"
+
+ThisBuild / scalaVersion := scala3Version
+
 lazy val root = project
   .in(file("."))
   .settings(
@@ -46,3 +51,10 @@ lazy val root = project
   )
 
 enablePlugins(FlywayPlugin)
+
+assemblyMergeStrategy in assembly := {
+  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+  case "application.conf"            => MergeStrategy.concat
+  case "reference.conf"              => MergeStrategy.concat
+  case _                             => MergeStrategy.first
+}
