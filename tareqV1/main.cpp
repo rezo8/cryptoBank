@@ -73,7 +73,7 @@ void sendCurlRequest(const string& firstName, const string& lastName, const stri
     // Read the output from the pipe
     char read[128];
     while (fgets(read, sizeof(read), pipe) != nullptr) {
-        cout << "Output from command: " << read;
+        cout << "Take note of your bank id: " << read;
     }
 
     // Close the pipe
