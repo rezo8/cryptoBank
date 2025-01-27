@@ -38,9 +38,9 @@ abstract class CoinsRoutes extends RouteContainer {
       (coinId: UUID, walletId: UUID, req: Request) =>
         handleAddCoinToWallet(coinId, walletId, req)
     },
-    Method.PUT / rootUrl / "walletCoinId" / zio.http.int(
+    Method.PUT / rootUrl / "walletCoinId" / zio.http.uuid(
       "walletCoinId"
-    ) -> handler { (walletCoinId: Int, req: Request) =>
+    ) -> handler { (walletCoinId: UUID, req: Request) =>
       handleUpdateCoinValue(walletCoinId, req)
     }
   )
@@ -87,7 +87,7 @@ abstract class CoinsRoutes extends RouteContainer {
   }
 
   private def handleUpdateCoinValue(
-      walletCoinId: Int,
+      walletCoinId: UUID,
       req: Request
   ): ZIO[Any, Nothing, Response] = {
     handleRepositoryProcess[MessageResponse](for {
@@ -95,7 +95,7 @@ abstract class CoinsRoutes extends RouteContainer {
       updateCoinAmount <- ZIO.fromEither(
         requestString.fromJson[UpdateCoinAmountRequest]
       )
-      updateRes <- coinsRepository.updateCoinOwnedSatoshi(
+      updateRes <- coinsRepository.updateWalletCoinOwnedSatoshi(
         walletCoinId,
         CoinValue(updateCoinAmount.satoshis)
       )

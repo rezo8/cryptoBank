@@ -5,13 +5,13 @@ CREATE TABLE coins (
     PRIMARY KEY (coinId)
 );
 
--- Wallet_Coins table
-CREATE TABLE wallet_coins (
-    id SERIAL PRIMARY KEY NOT NULL,
+-- WalletCoins table
+CREATE TABLE walletCoins (
+    walletCoinId UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     walletId UUID NOT NULL,
     coinId UUID NOT NULL,
     satoshis BIGINT NOT NULL CHECK (satoshis >= 0 AND satoshis <= 100000000),
-    FOREIGN KEY (walletId) REFERENCES wallets(id),
+    FOREIGN KEY (walletId) REFERENCES wallets(walletId),
     FOREIGN KEY (coinId) REFERENCES coins(coinId)
 );
 
@@ -25,7 +25,7 @@ BEGIN
     -- Calculate the current total for the coin_id excluding the row being inserted or updated
     SELECT COALESCE(SUM(satoshis), 0)
     INTO total_satoshis
-    FROM wallet_coins
+    FROM walletCoins
     WHERE coinId = NEW.coinId;
 
     -- Optional: Add logic to use total_satoshis
@@ -42,6 +42,6 @@ $$ LANGUAGE plpgsql;
 
 
 CREATE TRIGGER calculate_total_satoshis_before_insert_update
-BEFORE INSERT OR UPDATE ON wallet_coins
+BEFORE INSERT OR UPDATE ON walletCoins
 FOR EACH ROW
 EXECUTE FUNCTION calculate_total_satoshis();

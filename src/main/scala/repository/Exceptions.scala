@@ -44,8 +44,9 @@ object Exceptions {
     override def status: Status.Error = Status.NotFound
   }
 
-  case class CoinIsMissingForId(id: Int) extends ServerException {
-    override def getMessage: String = s"Coin with coinId [$id] does not exist"
+  case class WalletCoinIsMissingForId(id: UUID) extends ServerException {
+    override def getMessage: String =
+      s"WalletCoin with walletCoinId [$id] does not exist"
     override def status: Status.Error = Status.NotFound
   }
 

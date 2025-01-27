@@ -8,7 +8,11 @@ import doobie.postgres.*
 import doobie.postgres.implicits.*
 import doobie.util.transactor.Transactor.Aux
 import models.{CoinValue, UserWithCoins, WalletCoin}
-import repository.Exceptions.{CoinIsMissingForId, ServerException, Unexpected}
+import repository.Exceptions.{
+  WalletCoinIsMissingForId,
+  ServerException,
+  Unexpected
+}
 import zio.*
 import zio.interop.catz.*
 
@@ -23,7 +27,7 @@ abstract class CoinsRepository {
       coinId: UUID,
       walletId: UUID,
       coinValue: CoinValue
-  ): Task[Int] = {
+  ): Task[UUID] = {
     addCoinToWalletSql(
       coinId,
       walletId,
@@ -36,11 +40,11 @@ abstract class CoinsRepository {
     createCoinSql(coinId, coinName).transact(transactor).to[Task]
   }
 
-  def updateCoinOwnedSatoshi(
-      coinId: Int,
+  def updateWalletCoinOwnedSatoshi(
+      walletCoinId: UUID,
       coinValue: CoinValue
   ): Task[RuntimeFlags] = {
-    updateWalletCoinSatoshi(coinId, coinValue.satoshis)
+    updateWalletCoinSatoshi(walletCoinId, coinValue.satoshis)
       .transact(transactor)
       .to[Task]
   }
@@ -50,14 +54,14 @@ abstract class CoinsRepository {
   }
 
   def loadWalletCoinById(
-      coinId: Int
+      walletCoinId: UUID
   ): Task[Either[ServerException, WalletCoin]] = {
-    getWalletCoinByIdSql(coinId)
+    getWalletCoinByWalletCoinIdSql(walletCoinId)
       .transact(transactor)
       .to[Task]
       .fold(
         error => { Left(Unexpected()) },
-        _.fold(Left(CoinIsMissingForId(coinId)))(Right(_))
+        _.fold(Left(WalletCoinIsMissingForId(walletCoinId)))(Right(_))
       )
   }
 
@@ -70,11 +74,11 @@ abstract class CoinsRepository {
       .to[Task]
   }
 
-  private def getWalletCoinByIdSql(
-      coinId: Int
+  private def getWalletCoinByWalletCoinIdSql(
+      walletCoinId: UUID
   ): ConnectionIO[Option[WalletCoin]] = {
     sql"""
-           SELECT id, coinid, walletid, satoshis from wallet_coins where id = $coinId
+           SELECT walletCoinId, coinId, walletId, satoshis from walletCoins where walletCoinId = $walletCoinId
          """.stripMargin.query[WalletCoin].option
   }
 
@@ -82,7 +86,7 @@ abstract class CoinsRepository {
       walletId: UUID
   ): ConnectionIO[List[WalletCoin]] = {
     sql"""
-           SELECT * from wallet_coins where walletId = $walletId
+           SELECT * from walletCoins where walletId = $walletId
          """.stripMargin.query[WalletCoin].to[List]
   }
 
@@ -93,7 +97,7 @@ abstract class CoinsRepository {
         SELECT wc.*
         FROM users u
         JOIN wallets w ON u.id = w.userId
-        JOIN wallet_coins wc ON w.id = wc.walletId
+        JOIN walletCoins wc ON w.id = wc.walletId
         JOIN coins c ON wc.coinId = c.coinId
         WHERE u.id = $userId
       """.query[WalletCoin].to[List]
@@ -113,22 +117,22 @@ abstract class CoinsRepository {
       coinId: UUID,
       walletId: UUID,
       satoshis: Long
-  ): ConnectionIO[Int] = {
+  ): ConnectionIO[UUID] = {
     sql"""
-         | INSERT INTO wallet_coins (coinId, walletId, satoshis)
+         | INSERT INTO walletCoins (coinId, walletId, satoshis)
          | VALUES ($coinId, $walletId, $satoshis)
-         | RETURNING id
-         |""".stripMargin.query[Int].unique
+         | RETURNING walletCoinId
+         |""".stripMargin.query[UUID].unique
   }
 
   private def updateWalletCoinSatoshi(
-      internalId: Int,
+      internalId: UUID,
       newSatoshi: Long
   ) = {
     sql"""
-         UPDATE wallet_coins
+         UPDATE walletCoins
          SET satoshis = $newSatoshi
-         WHERE id = $internalId
+         WHERE walletCoinId = $internalId
        """.stripMargin.update.run
   }
 }

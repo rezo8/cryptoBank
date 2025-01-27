@@ -27,8 +27,8 @@ abstract class WalletsRoutes extends RouteContainer {
 
   private def handleLoadByUserId(id: UUID): ZIO[Any, Nothing, Response] = {
     handleRepositoryProcess[LoadWalletResponse](for {
-      loadRes <- walletsRepository.getWalletByUserId(id)
-    } yield loadRes.map(LoadWalletResponse.fromWallet))
+      loadRes <- walletsRepository.getWalletsByUserId(id)
+    } yield loadRes.map(LoadWalletResponse(_)))
   }
 
   private def handleCreateWallet(
@@ -42,6 +42,7 @@ abstract class WalletsRoutes extends RouteContainer {
       createRes <- walletsRepository
         .safeCreateWallet(
           createWalletRequest.userId,
+          createWalletRequest.currency,
           createWalletRequest.walletName
         )
     } yield createRes.map(walletId => CreateWalletResponse(walletId)))

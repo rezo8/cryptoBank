@@ -32,16 +32,22 @@ object WalletsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
         userId = uuidEither.getOrElse(throw new Exception())
         createdWallet <- walletsRepository.safeCreateWallet(
           userId,
+          "BTC",
           "test wallet"
         )
         createdWalletId <- ZIO.fromEither(createdWallet)
-        loadedWalletEither <- walletsRepository.getWalletByUserId(userId)
-        loadedWallet <- ZIO.fromEither(loadedWalletEither)
+        loadedWalletEither <- walletsRepository.getWalletsByUserId(userId)
+        loadedWallets <- ZIO.fromEither(loadedWalletEither)
+        loadedWallet = loadedWallets.head
       } yield assertTrue(
         loadedWallet == Wallet(
           id = createdWalletId,
           userId = userId,
-          walletName = "test wallet"
+          currency = "BTC",
+          balance = BigDecimal(0),
+          walletName = "test wallet",
+          createdAt = loadedWallet.createdAt,
+          updatedAt = loadedWallet.updatedAt
         )
       )
     },
@@ -50,7 +56,7 @@ object WalletsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
     ) {
       val randomId = UUID.randomUUID()
       for {
-        missingWallet <- walletsRepository.getWalletByUserId(randomId)
+        missingWallet <- walletsRepository.getWalletsByUserId(randomId)
       } yield assertTrue({
         missingWallet.left.getOrElse(
           throw new Exception()
@@ -58,7 +64,7 @@ object WalletsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       })
     },
     test(
-      "fails with WalletAlreadyExists when trying to create two wallets for a user"
+      "fails with WalletAlreadyExists when trying to create two wallets for a user with same currency"
     ) {
       val user = UsersFixtures.nextUser()
       val randomId = UUID.randomUUID()
@@ -72,10 +78,14 @@ object WalletsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
           user.passwordHash
         )
         uuid = uuidEither.getOrElse(throw new Exception())
-        createdWallet <- walletsRepository.safeCreateWallet(uuid, "test wallet")
-        loadedWallet <- walletsRepository.getWalletByUserId(uuid)
+        createdWallet <- walletsRepository.safeCreateWallet(
+          uuid,
+          "BTC",
+          "test wallet"
+        )
         createdWalletFailure <- walletsRepository.safeCreateWallet(
           uuid,
+          "BTC",
           "test wallet"
         )
       } yield assertTrue({

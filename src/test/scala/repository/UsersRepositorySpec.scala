@@ -29,7 +29,7 @@ object UsersRepositorySpec extends ZIOSpecDefault with RepositorySpec {
         loadedUser <- ZIO.fromEither(loadedUserEither)
       } yield assertTrue(
         user.copy(
-          id = Some(uuid),
+          userId = Some(uuid),
           createdAt = loadedUser.createdAt,
           updatedAt = loadedUser.updatedAt
         ) == loadedUser
@@ -52,7 +52,7 @@ object UsersRepositorySpec extends ZIOSpecDefault with RepositorySpec {
         loadedUser <- ZIO.fromEither(loadedUserEither)
       } yield assertTrue(
         user.copy(
-          id = Some(uuid),
+          userId = Some(uuid),
           createdAt = loadedUser.createdAt,
           updatedAt = loadedUser.updatedAt
         ) == loadedUser

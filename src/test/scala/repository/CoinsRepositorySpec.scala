@@ -6,7 +6,6 @@ import fixtures.UsersFixtures
 import models.CoinValue
 import org.postgresql.util.PSQLException
 import repository.CoinsRepositorySpec.coinsRepository.createCoin
-import repository.UsersRepositorySpec.usersRepository
 import zio.ZIO
 import zio.test.*
 import zio.test.Assertion.*
@@ -21,13 +20,6 @@ object CoinsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
     override val transactor: Aux[IO, Unit] = testTransactor
   val walletsRepository: WalletsRepository = new WalletsRepository:
     override val transactor: Aux[IO, Unit] = testTransactor
-
-  val user = UsersFixtures.nextUser()
-  val coinId = UUID.randomUUID()
-  val coinName = "Test Coin"
-  val coinValue = BigDecimal(Random.nextFloat())
-
-  var userId: UUID = UUID.randomUUID()
 
   def spec: Spec[Any, Throwable] = suite("CoinsRepositorySpec")(
     test("properly create and load coin ") {
@@ -47,7 +39,8 @@ object CoinsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
         userId = uuidEither.getOrElse(throw new Exception())
         createdWallet <- walletsRepository.safeCreateWallet(
           userId,
-          "test wallet 2"
+          "BTC",
+          "test wallet"
         )
         createdWalletId <- ZIO.fromEither(createdWallet)
         _ <- createCoin(coinId, coinName)
@@ -81,6 +74,7 @@ object CoinsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
         userId = uuidEither.getOrElse(throw new Exception())
         createdWallet <- walletsRepository.safeCreateWallet(
           userId,
+          "BTC",
           "test wallet"
         )
         createdWalletId <- ZIO.fromEither(createdWallet)
@@ -90,7 +84,7 @@ object CoinsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
           createdWalletId,
           coinValue
         )
-        _ <- coinsRepository.updateCoinOwnedSatoshi(
+        _ <- coinsRepository.updateWalletCoinOwnedSatoshi(
           addCoinToWalletRes,
           newValue
         )
@@ -123,6 +117,7 @@ object CoinsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
         userId = uuidEither.getOrElse(throw new Exception())
         createdWallet <- walletsRepository.safeCreateWallet(
           userId,
+          "BTC",
           "test wallet"
         )
         createdWalletId <- ZIO.fromEither(createdWallet)
@@ -134,6 +129,7 @@ object CoinsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
         )
         createdWallet2 <- walletsRepository.safeCreateWallet(
           userId,
+          "BTC",
           "test wallet 2"
         )
         secondWallet <- ZIO.fromEither(createdWallet)

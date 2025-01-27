@@ -27,7 +27,7 @@ object Responses {
   object LoadUserResponse {
     def fromUser(user: User): LoadUserResponse = {
       LoadUserResponse(
-        user.id,
+        user.userId,
         firstName = user.firstName,
         lastName = user.lastName,
         email = user.email,
@@ -39,19 +39,10 @@ object Responses {
   }
 
   final case class LoadWalletResponse(
-      id: UUID,
-      userId: UUID,
-      walletName: String
+      wallets: List[Wallet]
   ) extends ServerResponse
 
   object LoadWalletResponse {
-    def fromWallet(wallet: Wallet) = {
-      LoadWalletResponse(
-        id = wallet.id,
-        userId = wallet.userId,
-        walletName = wallet.walletName
-      )
-    }
     implicit val encoder: JsonEncoder[LoadWalletResponse] =
       DeriveJsonEncoder.gen[LoadWalletResponse]
   }
@@ -93,7 +84,7 @@ object Responses {
   }
 
   final case class AddCoinToWalletResponse(
-      walletCoinId: Int
+      walletCoinId: UUID
   ) extends ServerResponse
 
   object AddCoinToWalletResponse {

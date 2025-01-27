@@ -27,7 +27,7 @@ object UsersFixtures {
       updatedAt: Instant = Instant.now()
   ): User = {
     User(
-      id = id,
+      userId = id,
       userTypeId = userTypeId,
       firstName = firstName,
       lastName = lastName,

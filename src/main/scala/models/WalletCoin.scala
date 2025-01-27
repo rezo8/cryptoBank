@@ -5,7 +5,7 @@ import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 import java.util.UUID
 
 final case class WalletCoin(
-    id: Int,
+    walletCoinId: UUID,
     coinId: UUID,
     walletId: UUID,
     satoshis: Long

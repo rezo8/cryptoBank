@@ -1,7 +1,11 @@
 -- Create Wallets Table
-CREATE TABLE IF NOT EXISTS WALLETS(
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    userId UUID NOT NULL UNIQUE,
+CREATE TABLE wallets (
+    walletId UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    userId UUID REFERENCES users(userId),
+    currency VARCHAR(10) NOT NULL,
+    balance DECIMAL(20, 8) DEFAULT 0.0,
     walletName VARCHAR(255),
-    CONSTRAINT fk_user FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_user_currency UNIQUE (userId, currency) -- Unique constraint
 );

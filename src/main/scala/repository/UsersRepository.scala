@@ -41,29 +41,29 @@ abstract class UsersRepository {
       .to[Task]
   }
 
-  // Load user by ID
-  def getUser(id: UUID): Task[Either[ServerException, User]] =
+  // Load user by userId
+  def getUser(userId: UUID): Task[Either[ServerException, User]] =
     sql"""
-      SELECT id, userTypeId, firstName, lastName, email, phoneNumber, passwordHash, createdAt, updatedAt
+      SELECT userId, userTypeId, firstName, lastName, email, phoneNumber, passwordHash, createdAt, updatedAt
       FROM users
-      WHERE id = $id
+      WHERE userId = $userId
     """
       .query[User]
       .option
       .transact(transactor)
       .map(
         _.fold({
-          Left(UserIsMissingByUUID(id))
+          Left(UserIsMissingByUUID(userId))
         })(user => {
           Right(user)
         })
       )
       .to[Task]
 
-  // Load user by ID
+  // Load user by Email
   def getUserByEmail(email: String): Task[Either[ServerException, User]] =
     sql"""
-      SELECT id, userTypeId, firstName, lastName, email, phoneNumber, passwordHash, createdAt, updatedAt
+      SELECT userId, userTypeId, firstName, lastName, email, phoneNumber, passwordHash, createdAt, updatedAt
       FROM users
       WHERE email = $email
     """
@@ -91,7 +91,7 @@ abstract class UsersRepository {
     sql"""
       INSERT INTO users (userTypeId, firstName, lastName, email, phoneNumber, passwordHash)
       VALUES ($userTypeId, $firstName, $lastName, $email, $phoneNumber, $passwordHash)
-      RETURNING id
+      RETURNING userId
     """.query[UUID].unique.transact(transactor)
 
 }

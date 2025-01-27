@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS userTypes (
 );
 
 CREATE TABLE IF NOT EXISTS USERS(
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    userId UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     userTypeId INT REFERENCES userTypes(userTypeId),
     firstName TEXT NOT NULL,
     lastName TEXT NOT NULL,

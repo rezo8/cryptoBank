@@ -31,6 +31,7 @@ object Requests {
 
   final case class CreateWalletRequest(
       userId: UUID,
+      currency: String, // TODO make this an enum
       walletName: String
   )
 

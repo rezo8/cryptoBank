@@ -42,10 +42,22 @@ object BookkeepingFixtures {
   }
 
   def nextWallet(
-      uuid: UUID = java.util.UUID.randomUUID(),
+      id: UUID = java.util.UUID.randomUUID(),
       userId: UUID = java.util.UUID.randomUUID(),
-      walletName: String
+      currency: String = "BTC",
+      balance: BigDecimal = BigDecimal(math.random()),
+      walletName: String = Random.nextString(10),
+      createdAt: Instant = Instant.now(),
+      updatedAt: Instant = Instant.now()
   ): Wallet = {
-    Wallet(uuid, userId, walletName)
+    Wallet(
+      id = id,
+      userId = userId,
+      currency = currency,
+      balance = balance,
+      walletName = walletName,
+      createdAt = createdAt,
+      updatedAt = updatedAt
+    )
   }
 }

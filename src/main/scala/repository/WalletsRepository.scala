@@ -12,6 +12,7 @@ import repository.Exceptions.*
 import zio.*
 import zio.interop.catz.*
 
+import java.time.Instant
 import java.util.UUID
 
 abstract class WalletsRepository {
@@ -19,42 +20,47 @@ abstract class WalletsRepository {
 
   def safeCreateWallet(
       userId: UUID,
+      currency: String,
       walletName: String
   ): Task[Either[ServerException, UUID]] = {
-    createWallet(userId, walletName)
-      .attemptSomeSqlState {
-        case sqlstate.class23.UNIQUE_VIOLATION => WalletAlreadyExists(userId)
-        case _                                 => Unexpected()
+    createWallet(userId, currency, walletName)
+      .attemptSomeSqlState { case sqlstate.class23.UNIQUE_VIOLATION =>
+        WalletAlreadyExists(userId)
       }
       .to[Task]
   }
 
-  def getWalletByUserId(userId: UUID): Task[Either[ServerException, Wallet]] = {
+  def getWalletsByUserId(
+      userId: UUID
+  ): Task[Either[ServerException, List[Wallet]]] = {
     sql"""
-      SELECT id, userId, walletName
+      SELECT *
       FROM wallets
-      WHERE userId = ${userId}
+      WHERE userId = $userId
     """
       .query[Wallet]
-      .option
+      .to[List]
       .transact(transactor)
-      .map(
-        _.fold({
+      .map(loaded => {
+        if (loaded.isEmpty) {
           Left(WalletIsMissingByUserUUID(userId))
-        })(Right(_))
-      )
+        } else {
+          Right(loaded)
+        }
+      })
       .to[Task]
   }
 
   // Insert Wallet
   private def createWallet(
       userId: UUID,
+      currency: String,
       walletName: String
   ): IO[UUID] =
     sql"""
-      INSERT INTO wallets (userId, walletName)
-      VALUES ($userId, $walletName)
-      RETURNING id
+      INSERT INTO wallets (userId, currency, walletName)
+      VALUES ($userId, $currency, $walletName)
+      RETURNING walletId
     """.query[UUID].unique.transact(transactor)
 
 }
