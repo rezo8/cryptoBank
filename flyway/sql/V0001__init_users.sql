@@ -24,3 +24,5 @@ VALUES
     (1, 'ADMIN', 'System administrators with full access.'),
     (2, 'CUSTOMER', 'Regular users who can send and receive funds.'),
     (3, 'MERCHANT', 'Businesses that accept payments.');
+
+CREATE INDEX idxUsersEmail ON users(email);

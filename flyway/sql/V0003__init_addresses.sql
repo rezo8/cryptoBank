@@ -7,3 +7,5 @@ CREATE TABLE addresses (
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX idxAddressesWalletId ON addresses(accountId);

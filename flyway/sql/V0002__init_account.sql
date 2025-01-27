@@ -9,3 +9,6 @@ CREATE TABLE accounts (
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT unique_user_cryptoType UNIQUE (userId, cryptoType) -- Unique constraint
 );
+
+
+CREATE INDEX idxAccountsUserId ON accounts(userId);
