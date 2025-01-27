@@ -51,7 +51,7 @@ object BookkeepingFixtures {
       updatedAt: Instant = Instant.now()
   ): Account = {
     Account(
-      id = id,
+      addressId = id,
       userId = userId,
       cryptoType = cryptoType,
       balance = balance,

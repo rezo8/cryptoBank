@@ -41,7 +41,7 @@ object AccountsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
         loadedAccount = loadedAccounts.head
       } yield assertTrue(
         loadedAccount == Account(
-          id = createdAccountId,
+          addressId = createdAccountId,
           userId = userId,
           cryptoType = "BTC",
           balance = 0,

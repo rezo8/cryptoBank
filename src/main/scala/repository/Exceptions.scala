@@ -55,4 +55,13 @@ object Exceptions {
     override def getMessage: String =
       "Unexpected Exception"
   }
+
+  case class AddressIsMissingByAccountUUID(accountId: UUID)
+      extends ServerException {
+    override def getMessage: String =
+      s"Address with accountId [$accountId] does not exist."
+
+    override def status: Status.Error = Status.NotFound
+  }
+
 }
