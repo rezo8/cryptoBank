@@ -40,11 +40,15 @@ object Requests {
       DeriveJsonDecoder.gen[CreateAccountRequest]
   }
 
-  final case class CreateCoinRequest(coinId: UUID, coinName: String)
+  final case class CreateAddressRequest(
+      accountId: UUID,
+      addressLocation: String,
+      balance: Long
+  )
 
-  object CreateCoinRequest {
-    implicit val decoder: JsonDecoder[CreateCoinRequest] =
-      DeriveJsonDecoder.gen[CreateCoinRequest]
+  object CreateAddressRequest {
+    implicit val decoder: JsonDecoder[CreateAddressRequest] =
+      DeriveJsonDecoder.gen[CreateAddressRequest]
   }
 
   final case class AddCoinToAccountRequest(satoshis: Long)

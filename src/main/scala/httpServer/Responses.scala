@@ -1,6 +1,6 @@
 package httpServer
 
-import models.{CoinValue, User, Account, AccountCoin}
+import models.{Account, AccountCoin, Address, CoinValue, User}
 import zio.json.{DeriveJsonEncoder, JsonEncoder}
 
 import java.util.UUID
@@ -56,39 +56,18 @@ object Responses {
       DeriveJsonEncoder.gen[CreateAccountResponse]
   }
 
-  final case class CreateCoinResponse(coinId: UUID, coinName: String)
-      extends ServerResponse
+  final case class CreateAddressResponse(addressId: UUID) extends ServerResponse
 
-  object CreateCoinResponse {
-    implicit val encoder: JsonEncoder[CreateCoinResponse] =
-      DeriveJsonEncoder.gen[CreateCoinResponse]
+  object CreateAddressResponse {
+    implicit val encoder: JsonEncoder[CreateAddressResponse] =
+      DeriveJsonEncoder.gen[CreateAddressResponse]
   }
-
-  final case class LoadUserWithCoinsResponse(
-      userId: UUID,
-      accountCoins: List[AccountCoin]
+  final case class LoadAddressesForAccountResponse(
+      addresses: List[Address]
   ) extends ServerResponse
 
-  object LoadUserWithCoinsResponse {
-    implicit val encoder: JsonEncoder[LoadUserWithCoinsResponse] =
-      DeriveJsonEncoder.gen[LoadUserWithCoinsResponse]
-  }
-
-  final case class AccountCoinsResponse(
-      accountCoins: List[AccountCoin]
-  ) extends ServerResponse
-
-  object AccountCoinsResponse {
-    implicit val encoder: JsonEncoder[AccountCoinsResponse] =
-      DeriveJsonEncoder.gen[AccountCoinsResponse]
-  }
-
-  final case class AddCoinToAccountResponse(
-      accountCoinId: UUID
-  ) extends ServerResponse
-
-  object AddCoinToAccountResponse {
-    implicit val encoder: JsonEncoder[AddCoinToAccountResponse] =
-      DeriveJsonEncoder.gen[AddCoinToAccountResponse]
+  object LoadAddressesForAccountResponse {
+    implicit val encoder: JsonEncoder[LoadAddressesForAccountResponse] =
+      DeriveJsonEncoder.gen[LoadAddressesForAccountResponse]
   }
 }

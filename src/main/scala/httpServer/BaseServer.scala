@@ -4,7 +4,7 @@ import zio.http.*
 import zio.{ZIO, ZIOAppDefault, ZLayer}
 
 trait BaseServer extends ZIOAppDefault {
-  val coinsRoutes: CoinsRoutes
+  val coinsRoutes: AddressesRoutes
   val userRoutes: UserRoutes
   val accountsRoutes: AccountsRoutes
 

@@ -20,11 +20,11 @@ abstract class AddressRepository {
 
   // TODO handle account DNE
   def createBitcoinAddress(
-      addressId: UUID,
-      address: String,
-      balance: BitcoinAddressValue
+                            accountId: UUID,
+                            address: String,
+                            balance: BitcoinAddressValue
   ): Task[UUID] = {
-    createAddressSql(addressId, address, balance.satoshis).to[Task]
+    createAddressSql(accountId, address, balance.satoshis).to[Task]
   }
 
   def getAddressesByAccountId(
