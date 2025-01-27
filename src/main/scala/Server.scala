@@ -1,9 +1,4 @@
-import _root_.config.{
-  AppConfig,
-  ConfigLoadException,
-  DatabaseConfig,
-  DerivedConfig
-}
+import _root_.config.{AppConfig, ConfigLoadException, DerivedConfig}
 import cats.effect
 import cats.effect.IO
 import doobie.*
@@ -11,12 +6,7 @@ import doobie.util.transactor.Transactor
 import doobie.util.transactor.Transactor.Aux
 import httpServer.{AccountsRoutes, AddressesRoutes, BaseServer, UserRoutes}
 import pureconfig.ConfigSource
-import repository.{
-  AccountsRepository,
-  AddressRepository,
-  CoinsRepository,
-  UsersRepository
-}
+import repository.{AccountsRepository, AddressRepository, UsersRepository}
 import zio.*
 
 import scala.concurrent.ExecutionContext
@@ -51,7 +41,7 @@ object Server extends ZIOAppDefault with BaseServer {
     override val transactor: Aux[effect.IO, Unit] = main.transactor
 
   // Routes
-  override val coinsRoutes: AddressesRoutes = new AddressesRoutes:
+  override val addressesRoutes: AddressesRoutes = new AddressesRoutes:
     override val addressRepository: AddressRepository = main.addressRepository
     override implicit val ec: ExecutionContext =
       scala.concurrent.ExecutionContext.Implicits.global

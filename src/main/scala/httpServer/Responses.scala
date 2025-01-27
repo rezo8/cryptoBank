@@ -1,6 +1,6 @@
 package httpServer
 
-import models.{Account, AccountCoin, Address, CoinValue, User}
+import models.{Account, Address, User}
 import zio.json.{DeriveJsonEncoder, JsonEncoder}
 
 import java.util.UUID

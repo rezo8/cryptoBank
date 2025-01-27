@@ -1,14 +1,10 @@
 package httpServer
 
 import httpServer.Helpers.handleRepositoryProcess
-import httpServer.Requests.{
-  AddCoinToAccountRequest,
-  CreateAddressRequest,
-  UpdateCoinAmountRequest
-}
+import httpServer.Requests.{CreateAddressRequest, UpdateCoinAmountRequest}
 import httpServer.Responses.*
-import models.{AccountCoin, BitcoinAddressValue, CoinValue, UserWithCoins}
-import repository.{AddressRepository, CoinsRepository}
+import models.BitcoinAddressValue
+import repository.AddressRepository
 import zio.*
 import zio.http.*
 import zio.json.*
