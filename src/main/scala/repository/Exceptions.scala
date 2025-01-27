@@ -44,12 +44,6 @@ object Exceptions {
     override def status: Status.Error = Status.NotFound
   }
 
-  case class AccountCoinIsMissingForId(id: UUID) extends ServerException {
-    override def getMessage: String =
-      s"AccountCoin with accountCoinId [$id] does not exist"
-    override def status: Status.Error = Status.NotFound
-  }
-
   // TODO have take in root exception
   case class Unexpected() extends ServerException {
     override def getMessage: String =

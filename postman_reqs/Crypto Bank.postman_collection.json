@@ -31,7 +31,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"firstName\": \"{{$randomFirstName}}\",\n    \"lastName\": \"{{$randomLastName}}\",\n    \"email\": \"{{$randomEmail}}\",\n    \"phoneNumber\": \"{{$randomPhoneNumber}}\"\n}",
+							"raw": "{\n    \"firstName\": \"{{$randomFirstName}}\",\n    \"lastName\": \"{{$randomLastName}}\",\n    \"email\": \"{{$randomEmail}}\",\n    \"phoneNumber\": \"{{$randomPhoneNumber}}\",\n    \"userType\": \"customer\",\n    \"password\": \"ohnounsecure\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -117,7 +117,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"userId\": \"{{userId}}\",\n    \"accountName\": \"testAccount\"\n}",
+							"raw": "{\n    \"userId\": \"{{userId}}\",\n    \"cryptoType\": \"BTC\",\n    \"accountName\": \"testWallet\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -138,13 +138,13 @@
 					},
 					"response": [
 						{
-							"name": "409 Add Account",
+							"name": "409 Add Wallet",
 							"originalRequest": {
 								"method": "POST",
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"userId\": \"fba19caf-29e6-4b53-be85-d5606fc6fad4\",\n    \"accountName\": \"testAccount\"\n}",
+									"raw": "{\n    \"userId\": \"fba19caf-29e6-4b53-be85-d5606fc6fad4\",\n    \"walletName\": \"testWallet\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -152,13 +152,13 @@
 									}
 								},
 								"url": {
-									"raw": "localhost:8080/accounts",
+									"raw": "localhost:8080/wallets",
 									"host": [
 										"localhost"
 									],
 									"port": "8080",
 									"path": [
-										"accounts"
+										"wallets"
 									]
 								}
 							},
@@ -170,7 +170,7 @@
 					]
 				},
 				{
-					"name": "Get Account By ID",
+					"name": "Get Account By UserId",
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -189,18 +189,18 @@
 					},
 					"response": [
 						{
-							"name": "404 Get Account By UserID",
+							"name": "404 Get Wallet By UserID",
 							"originalRequest": {
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "localhost:8080/accounts/userId/fba19caf-29e6-4b53-be85-d5606fc6fac4",
+									"raw": "localhost:8080/wallets/userId/fba19caf-29e6-4b53-be85-d5606fc6fac4",
 									"host": [
 										"localhost"
 									],
 									"port": "8080",
 									"path": [
-										"accounts",
+										"wallets",
 										"userId",
 										"fba19caf-29e6-4b53-be85-d5606fc6fac4"
 									]
@@ -212,18 +212,18 @@
 							"body": null
 						},
 						{
-							"name": "200 Get Account By UserId",
+							"name": "200 Get Wallet By UserId",
 							"originalRequest": {
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "localhost:8080/accounts/userId/fba19caf-29e6-4b53-be85-d5606fc6fad4",
+									"raw": "localhost:8080/wallets/userId/fba19caf-29e6-4b53-be85-d5606fc6fad4",
 									"host": [
 										"localhost"
 									],
 									"port": "8080",
 									"path": [
-										"accounts",
+										"wallets",
 										"userId",
 										"fba19caf-29e6-4b53-be85-d5606fc6fad4"
 									]
@@ -242,7 +242,7 @@
 			"name": "Coins",
 			"item": [
 				{
-					"name": "Create Coin",
+					"name": "Create Address",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -259,7 +259,7 @@
 							"script": {
 								"exec": [
 									"var jsonData = pm.response.json();",
-									"pm.collectionVariables.set(\"coinId\", jsonData.coinId);",
+									"pm.collectionVariables.set(\"addressId\", jsonData.addressId);",
 									""
 								],
 								"type": "text/javascript",
@@ -272,7 +272,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"coinId\": \"{{$guid}}\",\n    \"coinName\" : \"Test Coin\"\n}",
+							"raw": "{\n    \"accountId\": \"{{accountId}}\",\n    \"addressLocation\": \"whereaddresslives\",\n    \"balance\": 50\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -280,20 +280,20 @@
 							}
 						},
 						"url": {
-							"raw": "localhost:8080/coins",
+							"raw": "localhost:8080/addresses",
 							"host": [
 								"localhost"
 							],
 							"port": "8080",
 							"path": [
-								"coins"
+								"addresses"
 							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "Get Coins for User",
+					"name": "Get Address for Account",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -310,58 +310,13 @@
 							}
 						},
 						"url": {
-							"raw": "localhost:8080/coins/userId/{{userId}}",
+							"raw": "localhost:8080/addresses/accountId/{{accountId}}",
 							"host": [
 								"localhost"
 							],
 							"port": "8080",
 							"path": [
-								"coins",
-								"userId",
-								"{{userId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Add Coin To Account",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"var jsonData = pm.response.json();",
-									"pm.collectionVariables.set(\"accountCoinId\", jsonData.accountCoinId);",
-									""
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"satoshis\": 500\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "localhost:8080/coins/coinId/{{coinId}}/accountId/{{accountId}}",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"coins",
-								"coinId",
-								"{{coinId}}",
+								"addresses",
 								"accountId",
 								"{{accountId}}"
 							]
@@ -370,13 +325,13 @@
 					"response": []
 				},
 				{
-					"name": "Update coin value",
+					"name": "Update address value",
 					"request": {
 						"method": "PUT",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"satoshis\": 50\n}",
+							"raw": "{\n    \"satoshis\": 25\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -384,15 +339,15 @@
 							}
 						},
 						"url": {
-							"raw": "localhost:8080/coins/accountCoinId/{{accountCoinId}}",
+							"raw": "localhost:8080/addresses/addressId/{{addressId}}",
 							"host": [
 								"localhost"
 							],
 							"port": "8080",
 							"path": [
-								"coins",
-								"accountCoinId",
-								"{{accountCoinId}}"
+								"addresses",
+								"addressId",
+								"{{addressId}}"
 							]
 						}
 					},
@@ -411,7 +366,7 @@
 			"value": ""
 		},
 		{
-			"key": "accountId",
+			"key": "walletId",
 			"value": ""
 		},
 		{
@@ -419,7 +374,15 @@
 			"value": ""
 		},
 		{
-			"key": "accountCoinId",
+			"key": "walletCoinId",
+			"value": ""
+		},
+		{
+			"key": "accountId",
+			"value": ""
+		},
+		{
+			"key": "addressId",
 			"value": ""
 		}
 	]

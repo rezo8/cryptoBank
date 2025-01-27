@@ -1,7 +1,7 @@
 package httpServer
 
 import httpServer.Helpers.handleRepositoryProcess
-import httpServer.Requests.{CreateAddressRequest, UpdateCoinAmountRequest}
+import httpServer.Requests.{CreateAddressRequest, UpdateAddressAmountRequest}
 import httpServer.Responses.*
 import models.BitcoinAddressValue
 import repository.AddressRepository
@@ -19,7 +19,7 @@ abstract class AddressesRoutes extends RouteContainer {
 
   override val routes: Routes[Any, Response] = Routes(
     Method.POST / rootUrl -> handler { handleCreateAddress(_) },
-    Method.POST / rootUrl / "addressId" / zio.http.uuid("addressId")
+    Method.PUT / rootUrl / "addressId" / zio.http.uuid("addressId")
       -> handler { (addressId: UUID, req: Request) =>
         handleUpdateAddressValue(addressId, req)
       },
@@ -33,13 +33,15 @@ abstract class AddressesRoutes extends RouteContainer {
     handleRepositoryProcess[CreateAddressResponse](
       for {
         requestString <- req.body.asString
-        createCoinRequest <- ZIO.fromEither(
+        createAddressRequest <- ZIO.fromEither(
           requestString.fromJson[CreateAddressRequest]
         )
         addressId <- addressRepository.createBitcoinAddress(
-          createCoinRequest.accountId,
-          createCoinRequest.addressLocation,
-          BitcoinAddressValue(createCoinRequest.balance) // TODO handle invalid
+          createAddressRequest.accountId,
+          createAddressRequest.addressLocation,
+          BitcoinAddressValue(
+            createAddressRequest.balance
+          ) // TODO handle invalid
         )
       } yield Right(
         CreateAddressResponse(addressId)
@@ -62,12 +64,12 @@ abstract class AddressesRoutes extends RouteContainer {
   ): ZIO[Any, Nothing, Response] = {
     handleRepositoryProcess[MessageResponse](for {
       requestString <- req.body.asString
-      updateCoinAmount <- ZIO.fromEither(
-        requestString.fromJson[UpdateCoinAmountRequest]
+      updateAddressAmount <- ZIO.fromEither(
+        requestString.fromJson[UpdateAddressAmountRequest]
       )
       updateRes <- addressRepository.updateBitcoinAddressValue(
         addressId,
-        BitcoinAddressValue(updateCoinAmount.satoshis)
+        BitcoinAddressValue(updateAddressAmount.satoshis)
       )
     } yield Right(MessageResponse("successful update")))
   }
