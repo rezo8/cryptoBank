@@ -1,6 +1,6 @@
 package fixtures
 
-import models.{Transaction, TransactionValue, Wallet}
+import models.{Transaction, TransactionValue, Account}
 
 import java.time.Instant
 import java.util.UUID
@@ -41,21 +41,21 @@ object BookkeepingFixtures {
     )
   }
 
-  def nextWallet(
+  def nextAccount(
       id: UUID = java.util.UUID.randomUUID(),
       userId: UUID = java.util.UUID.randomUUID(),
-      currency: String = "BTC",
+      cryptoType: String = "BTC",
       balance: Long = Random.nextLong(),
-      walletName: String = Random.nextString(10),
+      accountName: String = Random.nextString(10),
       createdAt: Instant = Instant.now(),
       updatedAt: Instant = Instant.now()
-  ): Wallet = {
-    Wallet(
+  ): Account = {
+    Account(
       id = id,
       userId = userId,
-      currency = currency,
+      cryptoType = cryptoType,
       balance = balance,
-      walletName = walletName,
+      accountName = accountName,
       createdAt = createdAt,
       updatedAt = updatedAt
     )

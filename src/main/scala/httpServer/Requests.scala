@@ -29,15 +29,15 @@ object Requests {
       DeriveJsonDecoder.gen[CreateUserRequest]
   }
 
-  final case class CreateWalletRequest(
+  final case class CreateAccountRequest(
       userId: UUID,
-      currency: String, // TODO make this an enum
-      walletName: String
+      cryptoType: String, // TODO make this an enum
+      accountName: String
   )
 
-  object CreateWalletRequest {
-    implicit val decoder: JsonDecoder[CreateWalletRequest] =
-      DeriveJsonDecoder.gen[CreateWalletRequest]
+  object CreateAccountRequest {
+    implicit val decoder: JsonDecoder[CreateAccountRequest] =
+      DeriveJsonDecoder.gen[CreateAccountRequest]
   }
 
   final case class CreateCoinRequest(coinId: UUID, coinName: String)
@@ -47,11 +47,11 @@ object Requests {
       DeriveJsonDecoder.gen[CreateCoinRequest]
   }
 
-  final case class AddCoinToWalletRequest(satoshis: Long)
+  final case class AddCoinToAccountRequest(satoshis: Long)
 
-  object AddCoinToWalletRequest {
-    implicit val decoder: JsonDecoder[AddCoinToWalletRequest] =
-      DeriveJsonDecoder.gen[AddCoinToWalletRequest]
+  object AddCoinToAccountRequest {
+    implicit val decoder: JsonDecoder[AddCoinToAccountRequest] =
+      DeriveJsonDecoder.gen[AddCoinToAccountRequest]
   }
 
   final case class UpdateCoinAmountRequest(satoshis: Long)

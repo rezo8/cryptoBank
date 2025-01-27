@@ -1,6 +1,6 @@
 package httpServer
 
-import models.{CoinValue, User, Wallet, WalletCoin}
+import models.{CoinValue, User, Account, AccountCoin}
 import zio.json.{DeriveJsonEncoder, JsonEncoder}
 
 import java.util.UUID
@@ -38,22 +38,22 @@ object Responses {
       DeriveJsonEncoder.gen[LoadUserResponse]
   }
 
-  final case class LoadWalletResponse(
-      wallets: List[Wallet]
+  final case class LoadAccountResponse(
+      accounts: List[Account]
   ) extends ServerResponse
 
-  object LoadWalletResponse {
-    implicit val encoder: JsonEncoder[LoadWalletResponse] =
-      DeriveJsonEncoder.gen[LoadWalletResponse]
+  object LoadAccountResponse {
+    implicit val encoder: JsonEncoder[LoadAccountResponse] =
+      DeriveJsonEncoder.gen[LoadAccountResponse]
   }
 
-  final case class CreateWalletResponse(
-      walletId: UUID
+  final case class CreateAccountResponse(
+      accountId: UUID
   ) extends ServerResponse
 
-  object CreateWalletResponse {
-    implicit val encoder: JsonEncoder[CreateWalletResponse] =
-      DeriveJsonEncoder.gen[CreateWalletResponse]
+  object CreateAccountResponse {
+    implicit val encoder: JsonEncoder[CreateAccountResponse] =
+      DeriveJsonEncoder.gen[CreateAccountResponse]
   }
 
   final case class CreateCoinResponse(coinId: UUID, coinName: String)
@@ -66,7 +66,7 @@ object Responses {
 
   final case class LoadUserWithCoinsResponse(
       userId: UUID,
-      walletCoins: List[WalletCoin]
+      accountCoins: List[AccountCoin]
   ) extends ServerResponse
 
   object LoadUserWithCoinsResponse {
@@ -74,21 +74,21 @@ object Responses {
       DeriveJsonEncoder.gen[LoadUserWithCoinsResponse]
   }
 
-  final case class WalletCoinsResponse(
-      walletCoins: List[WalletCoin]
+  final case class AccountCoinsResponse(
+      accountCoins: List[AccountCoin]
   ) extends ServerResponse
 
-  object WalletCoinsResponse {
-    implicit val encoder: JsonEncoder[WalletCoinsResponse] =
-      DeriveJsonEncoder.gen[WalletCoinsResponse]
+  object AccountCoinsResponse {
+    implicit val encoder: JsonEncoder[AccountCoinsResponse] =
+      DeriveJsonEncoder.gen[AccountCoinsResponse]
   }
 
-  final case class AddCoinToWalletResponse(
-      walletCoinId: UUID
+  final case class AddCoinToAccountResponse(
+      accountCoinId: UUID
   ) extends ServerResponse
 
-  object AddCoinToWalletResponse {
-    implicit val encoder: JsonEncoder[AddCoinToWalletResponse] =
-      DeriveJsonEncoder.gen[AddCoinToWalletResponse]
+  object AddCoinToAccountResponse {
+    implicit val encoder: JsonEncoder[AddCoinToAccountResponse] =
+      DeriveJsonEncoder.gen[AddCoinToAccountResponse]
   }
 }

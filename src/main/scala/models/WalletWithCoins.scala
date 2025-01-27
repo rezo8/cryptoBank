@@ -2,11 +2,11 @@ package models
 
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
-case class WalletWithCoins(wallet: Wallet, coins: List[WalletCoin])
+case class AccountWithCoins(account: Account, coins: List[AccountCoin])
 
-object WalletWithCoins {
-  implicit val decoder: JsonDecoder[WalletWithCoins] =
-    DeriveJsonDecoder.gen[WalletWithCoins]
-  implicit val encoder: JsonEncoder[WalletWithCoins] =
-    DeriveJsonEncoder.gen[WalletWithCoins]
+object AccountWithCoins {
+  implicit val decoder: JsonDecoder[AccountWithCoins] =
+    DeriveJsonDecoder.gen[AccountWithCoins]
+  implicit val encoder: JsonEncoder[AccountWithCoins] =
+    DeriveJsonEncoder.gen[AccountWithCoins]
 }

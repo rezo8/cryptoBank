@@ -94,17 +94,17 @@
 			]
 		},
 		{
-			"name": "Wallets",
+			"name": "Accounts",
 			"item": [
 				{
-					"name": "Add Wallet",
+					"name": "Add Account",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
 									"var jsonData = pm.response.json();",
-									"pm.collectionVariables.set(\"walletId\", jsonData.walletId);",
+									"pm.collectionVariables.set(\"accountId\", jsonData.accountId);",
 									""
 								],
 								"type": "text/javascript",
@@ -117,7 +117,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"userId\": \"{{userId}}\",\n    \"walletName\": \"testWallet\"\n}",
+							"raw": "{\n    \"userId\": \"{{userId}}\",\n    \"accountName\": \"testAccount\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -125,26 +125,26 @@
 							}
 						},
 						"url": {
-							"raw": "localhost:8080/wallets/",
+							"raw": "localhost:8080/accounts/",
 							"host": [
 								"localhost"
 							],
 							"port": "8080",
 							"path": [
-								"wallets",
+								"accounts",
 								""
 							]
 						}
 					},
 					"response": [
 						{
-							"name": "409 Add Wallet",
+							"name": "409 Add Account",
 							"originalRequest": {
 								"method": "POST",
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"userId\": \"fba19caf-29e6-4b53-be85-d5606fc6fad4\",\n    \"walletName\": \"testWallet\"\n}",
+									"raw": "{\n    \"userId\": \"fba19caf-29e6-4b53-be85-d5606fc6fad4\",\n    \"accountName\": \"testAccount\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -152,13 +152,13 @@
 									}
 								},
 								"url": {
-									"raw": "localhost:8080/wallets",
+									"raw": "localhost:8080/accounts",
 									"host": [
 										"localhost"
 									],
 									"port": "8080",
 									"path": [
-										"wallets"
+										"accounts"
 									]
 								}
 							},
@@ -170,18 +170,18 @@
 					]
 				},
 				{
-					"name": "Get Wallet By ID",
+					"name": "Get Account By ID",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "localhost:8080/wallets/userId/{{userId}}",
+							"raw": "localhost:8080/accounts/userId/{{userId}}",
 							"host": [
 								"localhost"
 							],
 							"port": "8080",
 							"path": [
-								"wallets",
+								"accounts",
 								"userId",
 								"{{userId}}"
 							]
@@ -189,18 +189,18 @@
 					},
 					"response": [
 						{
-							"name": "404 Get Wallet By UserID",
+							"name": "404 Get Account By UserID",
 							"originalRequest": {
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "localhost:8080/wallets/userId/fba19caf-29e6-4b53-be85-d5606fc6fac4",
+									"raw": "localhost:8080/accounts/userId/fba19caf-29e6-4b53-be85-d5606fc6fac4",
 									"host": [
 										"localhost"
 									],
 									"port": "8080",
 									"path": [
-										"wallets",
+										"accounts",
 										"userId",
 										"fba19caf-29e6-4b53-be85-d5606fc6fac4"
 									]
@@ -212,18 +212,18 @@
 							"body": null
 						},
 						{
-							"name": "200 Get Wallet By UserId",
+							"name": "200 Get Account By UserId",
 							"originalRequest": {
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "localhost:8080/wallets/userId/fba19caf-29e6-4b53-be85-d5606fc6fad4",
+									"raw": "localhost:8080/accounts/userId/fba19caf-29e6-4b53-be85-d5606fc6fad4",
 									"host": [
 										"localhost"
 									],
 									"port": "8080",
 									"path": [
-										"wallets",
+										"accounts",
 										"userId",
 										"fba19caf-29e6-4b53-be85-d5606fc6fad4"
 									]
@@ -325,14 +325,14 @@
 					"response": []
 				},
 				{
-					"name": "Add Coin To Wallet",
+					"name": "Add Coin To Account",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
 									"var jsonData = pm.response.json();",
-									"pm.collectionVariables.set(\"walletCoinId\", jsonData.walletCoinId);",
+									"pm.collectionVariables.set(\"accountCoinId\", jsonData.accountCoinId);",
 									""
 								],
 								"type": "text/javascript",
@@ -353,7 +353,7 @@
 							}
 						},
 						"url": {
-							"raw": "localhost:8080/coins/coinId/{{coinId}}/walletId/{{walletId}}",
+							"raw": "localhost:8080/coins/coinId/{{coinId}}/accountId/{{accountId}}",
 							"host": [
 								"localhost"
 							],
@@ -362,8 +362,8 @@
 								"coins",
 								"coinId",
 								"{{coinId}}",
-								"walletId",
-								"{{walletId}}"
+								"accountId",
+								"{{accountId}}"
 							]
 						}
 					},
@@ -384,15 +384,15 @@
 							}
 						},
 						"url": {
-							"raw": "localhost:8080/coins/walletCoinId/{{walletCoinId}}",
+							"raw": "localhost:8080/coins/accountCoinId/{{accountCoinId}}",
 							"host": [
 								"localhost"
 							],
 							"port": "8080",
 							"path": [
 								"coins",
-								"walletCoinId",
-								"{{walletCoinId}}"
+								"accountCoinId",
+								"{{accountCoinId}}"
 							]
 						}
 					},
@@ -411,7 +411,7 @@
 			"value": ""
 		},
 		{
-			"key": "walletId",
+			"key": "accountId",
 			"value": ""
 		},
 		{
@@ -419,7 +419,7 @@
 			"value": ""
 		},
 		{
-			"key": "walletCoinId",
+			"key": "accountCoinId",
 			"value": ""
 		}
 	]

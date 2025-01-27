@@ -5,17 +5,17 @@ import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 import java.time.Instant
 import java.util.UUID
 
-final case class Wallet(
+final case class Account(
     id: UUID,
     userId: UUID,
-    currency: String, // TODO Make this an enum
+    cryptoType: String, // TODO Make this an enum
     balance: Long, // Stored in a low unit level. EX: Satoshi vs Bitcoin
-    walletName: String,
+    accountName: String,
     createdAt: Instant,
     updatedAt: Instant
 )
 
-object Wallet {
-  implicit val decoder: JsonDecoder[Wallet] = DeriveJsonDecoder.gen[Wallet]
-  implicit val encoder: JsonEncoder[Wallet] = DeriveJsonEncoder.gen[Wallet]
+object Account {
+  implicit val decoder: JsonDecoder[Account] = DeriveJsonDecoder.gen[Account]
+  implicit val encoder: JsonEncoder[Account] = DeriveJsonEncoder.gen[Account]
 }

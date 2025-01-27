@@ -6,7 +6,7 @@ import java.util.UUID
 case class Transaction(
     transactionId: UUID, // TODO build wrapper class.
     inputs: Map[
-      UUID, // This is a wallet Id.
+      UUID, // This is a account Id.
       TransactionValue
     ], // TODO build wrapper class around UUIDs
     outputs: Map[UUID, TransactionValue],
@@ -17,7 +17,7 @@ case class Transaction(
     transactionTime: Instant
 ) {
 
-  def inputWalletIds(): Seq[UUID] = {
+  def inputAccountIds(): Seq[UUID] = {
     inputs.keys.toSeq
   }
 
@@ -26,7 +26,7 @@ case class Transaction(
       TransactionValue(curr.bitCoinChunk.+(acc.bitCoinChunk))
     )
 
-  def outputWalletIds(): Seq[UUID] = {
+  def outputAccountIds(): Seq[UUID] = {
     outputs.keys.toSeq
   }
 

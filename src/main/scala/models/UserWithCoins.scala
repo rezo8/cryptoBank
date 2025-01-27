@@ -6,7 +6,7 @@ import java.util.UUID
 
 final case class UserWithCoins(
     userId: UUID,
-    walletCoins: List[WalletCoin]
+    accountCoins: List[AccountCoin]
 )
 
 object UserWithCoins {

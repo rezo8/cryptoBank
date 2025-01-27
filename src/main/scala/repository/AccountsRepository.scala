@@ -7,7 +7,7 @@ import doobie.implicits.*
 import doobie.postgres.*
 import doobie.postgres.implicits.*
 import doobie.util.transactor.Transactor.Aux
-import models.Wallet
+import models.Account
 import repository.Exceptions.*
 import zio.*
 import zio.interop.catz.*
@@ -15,35 +15,35 @@ import zio.interop.catz.*
 import java.time.Instant
 import java.util.UUID
 
-abstract class WalletsRepository {
+abstract class AccountsRepository {
   val transactor: Aux[IO, Unit]
 
-  def safeCreateWallet(
+  def safeCreateAccount(
       userId: UUID,
-      currency: String,
-      walletName: String
+      cryptoType: String,
+      accountName: String
   ): Task[Either[ServerException, UUID]] = {
-    createWallet(userId, currency, walletName)
+    createAccount(userId, cryptoType, accountName)
       .attemptSomeSqlState { case sqlstate.class23.UNIQUE_VIOLATION =>
-        WalletAlreadyExists(userId)
+        AccountAlreadyExists(userId)
       }
       .to[Task]
   }
 
-  def getWalletsByUserId(
+  def getAccountsByUserId(
       userId: UUID
-  ): Task[Either[ServerException, List[Wallet]]] = {
+  ): Task[Either[ServerException, List[Account]]] = {
     sql"""
       SELECT *
-      FROM wallets
+      FROM accounts
       WHERE userId = $userId
     """
-      .query[Wallet]
+      .query[Account]
       .to[List]
       .transact(transactor)
       .map(loaded => {
         if (loaded.isEmpty) {
-          Left(WalletIsMissingByUserUUID(userId))
+          Left(AccountIsMissingByUserUUID(userId))
         } else {
           Right(loaded)
         }
@@ -51,16 +51,16 @@ abstract class WalletsRepository {
       .to[Task]
   }
 
-  // Insert Wallet
-  private def createWallet(
+  // Insert Account
+  private def createAccount(
       userId: UUID,
-      currency: String,
-      walletName: String
+      cryptoType: String,
+      accountName: String
   ): IO[UUID] =
     sql"""
-      INSERT INTO wallets (userId, currency, walletName)
-      VALUES ($userId, $currency, $walletName)
-      RETURNING walletId
+      INSERT INTO accounts (userId, cryptoType, accountName)
+      VALUES ($userId, $cryptoType, $accountName)
+      RETURNING accountId
     """.query[UUID].unique.transact(transactor)
 
 }

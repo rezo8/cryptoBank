@@ -3,22 +3,22 @@ package repository
 import cats.effect.*
 import doobie.util.transactor.Transactor.Aux
 import fixtures.UsersFixtures
-import models.Wallet
-import repository.Exceptions.{WalletAlreadyExists, WalletIsMissingByUserUUID}
-import repository.UsersRepositorySpec.{suite, usersRepository}
+import models.Account
+import repository.Exceptions.{AccountAlreadyExists, AccountIsMissingByUserUUID}
+import repository.UsersRepositorySpec.suite
 import zio.ZIO
 import zio.test.{Spec, TestAspect, ZIOSpecDefault, assertTrue}
 
 import java.util.UUID
 
-object WalletsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
+object AccountsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
   val usersRepository: UsersRepository = new UsersRepository:
     override val transactor: Aux[IO, Unit] = testTransactor
-  val walletsRepository: WalletsRepository = new WalletsRepository:
+  val accountsRepository: AccountsRepository = new AccountsRepository:
     override val transactor: Aux[IO, Unit] = testTransactor
 
-  def spec: Spec[Any, Throwable] = suite("WalletsRepositorySpec")(
-    test("properly create and load wallet ") {
+  def spec: Spec[Any, Throwable] = suite("AccountsRepositorySpec")(
+    test("properly create and load account ") {
       val user = UsersFixtures.nextUser()
       for {
         uuidEither <- usersRepository.safeCreateUser(
@@ -30,41 +30,41 @@ object WalletsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
           user.passwordHash
         )
         userId = uuidEither.getOrElse(throw new Exception())
-        createdWallet <- walletsRepository.safeCreateWallet(
+        createdAccount <- accountsRepository.safeCreateAccount(
           userId,
           "BTC",
-          "test wallet"
+          "test account"
         )
-        createdWalletId <- ZIO.fromEither(createdWallet)
-        loadedWalletEither <- walletsRepository.getWalletsByUserId(userId)
-        loadedWallets <- ZIO.fromEither(loadedWalletEither)
-        loadedWallet = loadedWallets.head
+        createdAccountId <- ZIO.fromEither(createdAccount)
+        loadedAccountEither <- accountsRepository.getAccountsByUserId(userId)
+        loadedAccounts <- ZIO.fromEither(loadedAccountEither)
+        loadedAccount = loadedAccounts.head
       } yield assertTrue(
-        loadedWallet == Wallet(
-          id = createdWalletId,
+        loadedAccount == Account(
+          id = createdAccountId,
           userId = userId,
-          currency = "BTC",
+          cryptoType = "BTC",
           balance = 0,
-          walletName = "test wallet",
-          createdAt = loadedWallet.createdAt,
-          updatedAt = loadedWallet.updatedAt
+          accountName = "test account",
+          createdAt = loadedAccount.createdAt,
+          updatedAt = loadedAccount.updatedAt
         )
       )
     },
     test(
-      "fails with WalletIsMissingByUserUUID wallet does not exist"
+      "fails with AccountIsMissingByUserUUID account does not exist"
     ) {
       val randomId = UUID.randomUUID()
       for {
-        missingWallet <- walletsRepository.getWalletsByUserId(randomId)
+        missingAccount <- accountsRepository.getAccountsByUserId(randomId)
       } yield assertTrue({
-        missingWallet.left.getOrElse(
+        missingAccount.left.getOrElse(
           throw new Exception()
-        ) == WalletIsMissingByUserUUID(randomId)
+        ) == AccountIsMissingByUserUUID(randomId)
       })
     },
     test(
-      "fails with WalletAlreadyExists when trying to create two wallets for a user with same currency"
+      "fails with AccountAlreadyExists when trying to create two accounts for a user with same cryptoType"
     ) {
       val user = UsersFixtures.nextUser()
       val randomId = UUID.randomUUID()
@@ -78,20 +78,20 @@ object WalletsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
           user.passwordHash
         )
         uuid = uuidEither.getOrElse(throw new Exception())
-        createdWallet <- walletsRepository.safeCreateWallet(
+        createdAccount <- accountsRepository.safeCreateAccount(
           uuid,
           "BTC",
-          "test wallet"
+          "test account"
         )
-        createdWalletFailure <- walletsRepository.safeCreateWallet(
+        createdAccountFailure <- accountsRepository.safeCreateAccount(
           uuid,
           "BTC",
-          "test wallet"
+          "test account"
         )
       } yield assertTrue({
-        createdWalletFailure.left.getOrElse(
+        createdAccountFailure.left.getOrElse(
           throw new Exception()
-        ) == WalletAlreadyExists(uuid)
+        ) == AccountAlreadyExists(uuid)
       })
     }
   ) @@ TestAspect.beforeAll(initializeDb)

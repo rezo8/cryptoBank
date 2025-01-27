@@ -2,18 +2,12 @@ package httpServer
 
 import httpServer.Helpers.handleRepositoryProcess
 import httpServer.Requests.{
-  AddCoinToWalletRequest,
+  AddCoinToAccountRequest,
   CreateCoinRequest,
   UpdateCoinAmountRequest
 }
-import httpServer.Responses.{
-  AddCoinToWalletResponse,
-  CreateCoinResponse,
-  LoadUserWithCoinsResponse,
-  MessageResponse,
-  WalletCoinsResponse
-}
-import models.{CoinValue, UserWithCoins, WalletCoin}
+import httpServer.Responses.*
+import models.{AccountCoin, CoinValue, UserWithCoins}
 import repository.CoinsRepository
 import zio.*
 import zio.http.*
@@ -34,14 +28,14 @@ abstract class CoinsRoutes extends RouteContainer {
     },
     Method.POST / rootUrl / "coinId" / zio.http.uuid(
       "coinId"
-    ) / "walletId" / zio.http.uuid("walletId") -> handler {
-      (coinId: UUID, walletId: UUID, req: Request) =>
-        handleAddCoinToWallet(coinId, walletId, req)
+    ) / "accountId" / zio.http.uuid("accountId") -> handler {
+      (coinId: UUID, accountId: UUID, req: Request) =>
+        handleAddCoinToAccount(coinId, accountId, req)
     },
-    Method.PUT / rootUrl / "walletCoinId" / zio.http.uuid(
-      "walletCoinId"
-    ) -> handler { (walletCoinId: UUID, req: Request) =>
-      handleUpdateCoinValue(walletCoinId, req)
+    Method.PUT / rootUrl / "accountCoinId" / zio.http.uuid(
+      "accountCoinId"
+    ) -> handler { (accountCoinId: UUID, req: Request) =>
+      handleUpdateCoinValue(accountCoinId, req)
     }
   )
 
@@ -70,24 +64,24 @@ abstract class CoinsRoutes extends RouteContainer {
         .map(userWithCoins => {
           LoadUserWithCoinsResponse(
             userId = userWithCoins.userId,
-            walletCoins = userWithCoins.walletCoins
+            accountCoins = userWithCoins.accountCoins
           )
         })
     } yield Right(loadRes))
   }
 
-  private def handleLoadCoinsByWalletId(
+  private def handleLoadCoinsByAccountId(
       id: UUID
   ): ZIO[Any, Nothing, Response] = {
-    handleRepositoryProcess[WalletCoinsResponse](for {
+    handleRepositoryProcess[AccountCoinsResponse](for {
       loadRes <- coinsRepository
-        .loadCoinsForWallet(id)
-        .map(WalletCoinsResponse(_))
+        .loadCoinsForAccount(id)
+        .map(AccountCoinsResponse(_))
     } yield Right(loadRes))
   }
 
   private def handleUpdateCoinValue(
-      walletCoinId: UUID,
+      accountCoinId: UUID,
       req: Request
   ): ZIO[Any, Nothing, Response] = {
     handleRepositoryProcess[MessageResponse](for {
@@ -95,30 +89,30 @@ abstract class CoinsRoutes extends RouteContainer {
       updateCoinAmount <- ZIO.fromEither(
         requestString.fromJson[UpdateCoinAmountRequest]
       )
-      updateRes <- coinsRepository.updateWalletCoinOwnedSatoshi(
-        walletCoinId,
+      updateRes <- coinsRepository.updateAccountCoinOwnedSatoshi(
+        accountCoinId,
         CoinValue(updateCoinAmount.satoshis)
       )
     } yield Right(MessageResponse("successful update")))
   }
 
-  private def handleAddCoinToWallet(
+  private def handleAddCoinToAccount(
       coinId: UUID,
-      walletId: UUID,
+      accountId: UUID,
       req: Request
   ): ZIO[Any, Nothing, Response] = {
-    handleRepositoryProcess[AddCoinToWalletResponse](for {
+    handleRepositoryProcess[AddCoinToAccountResponse](for {
       userBodyString <- req.body.asString
-      addCoinToWallet <- ZIO.fromEither(
-        userBodyString.fromJson[AddCoinToWalletRequest]
+      addCoinToAccount <- ZIO.fromEither(
+        userBodyString.fromJson[AddCoinToAccountRequest]
       )
       createRes <- coinsRepository
-        .addCoinToWallet(
+        .addCoinToAccount(
           coinId,
-          walletId,
-          CoinValue(addCoinToWallet.satoshis)
+          accountId,
+          CoinValue(addCoinToAccount.satoshis)
         )
-        .map(walletCoinId => AddCoinToWalletResponse(walletCoinId))
+        .map(accountCoinId => AddCoinToAccountResponse(accountCoinId))
     } yield Right(createRes))
   }
 }

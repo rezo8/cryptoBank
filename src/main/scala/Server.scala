@@ -9,9 +9,9 @@ import cats.effect.IO
 import doobie.*
 import doobie.util.transactor.Transactor
 import doobie.util.transactor.Transactor.Aux
-import httpServer.{BaseServer, CoinsRoutes, UserRoutes, WalletsRoutes}
+import httpServer.{BaseServer, CoinsRoutes, UserRoutes, AccountsRoutes}
 import pureconfig.ConfigSource
-import repository.{CoinsRepository, UsersRepository, WalletsRepository}
+import repository.{CoinsRepository, UsersRepository, AccountsRepository}
 import zio.*
 
 import scala.concurrent.ExecutionContext
@@ -42,7 +42,7 @@ object Server extends ZIOAppDefault with BaseServer {
   private val usersRepository = new UsersRepository:
     override val transactor: Aux[effect.IO, Unit] = main.transactor
 
-  private val walletsRepository = new WalletsRepository:
+  private val accountsRepository = new AccountsRepository:
     override val transactor: Aux[effect.IO, Unit] = main.transactor
 
   // Routes
@@ -56,8 +56,8 @@ object Server extends ZIOAppDefault with BaseServer {
       scala.concurrent.ExecutionContext.Implicits.global
     override val usersRepository: UsersRepository = main.usersRepository
 
-  override val walletsRoutes: WalletsRoutes = new WalletsRoutes:
-    override val walletsRepository: WalletsRepository = main.walletsRepository
+  override val accountsRoutes: AccountsRoutes = new AccountsRoutes:
+    override val accountsRepository: AccountsRepository = main.accountsRepository
     override implicit val ec: ExecutionContext =
       scala.concurrent.ExecutionContext.Implicits.global
 

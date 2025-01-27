@@ -30,23 +30,23 @@ object Exceptions {
     override def status: Status.Error = Status.Conflict
   }
 
-  case class WalletAlreadyExists(userId: UUID) extends ServerException {
+  case class AccountAlreadyExists(userId: UUID) extends ServerException {
     override def getMessage: String =
-      s"Wallet already exists for user [${userId.toString}]. Please use their existing wallet."
+      s"Account already exists for user [${userId.toString}]. Please use their existing account."
 
     override def status: Status.Error = Status.Conflict
   }
 
-  case class WalletIsMissingByUserUUID(uuid: UUID) extends ServerException {
+  case class AccountIsMissingByUserUUID(uuid: UUID) extends ServerException {
     override def getMessage: String =
-      s"Wallet with userId [$uuid] does not exist."
+      s"Account with userId [$uuid] does not exist."
 
     override def status: Status.Error = Status.NotFound
   }
 
-  case class WalletCoinIsMissingForId(id: UUID) extends ServerException {
+  case class AccountCoinIsMissingForId(id: UUID) extends ServerException {
     override def getMessage: String =
-      s"WalletCoin with walletCoinId [$id] does not exist"
+      s"AccountCoin with accountCoinId [$id] does not exist"
     override def status: Status.Error = Status.NotFound
   }
 

@@ -18,7 +18,7 @@ object CoinsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
     override val transactor: Aux[IO, Unit] = testTransactor
   val usersRepository: UsersRepository = new UsersRepository:
     override val transactor: Aux[IO, Unit] = testTransactor
-  val walletsRepository: WalletsRepository = new WalletsRepository:
+  val accountsRepository: AccountsRepository = new AccountsRepository:
     override val transactor: Aux[IO, Unit] = testTransactor
 
   def spec: Spec[Any, Throwable] = suite("CoinsRepositorySpec")(
@@ -37,23 +37,23 @@ object CoinsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
           user.passwordHash
         )
         userId = uuidEither.getOrElse(throw new Exception())
-        createdWallet <- walletsRepository.safeCreateWallet(
+        createdAccount <- accountsRepository.safeCreateAccount(
           userId,
           "BTC",
-          "test wallet"
+          "test account"
         )
-        createdWalletId <- ZIO.fromEither(createdWallet)
+        createdAccountId <- ZIO.fromEither(createdAccount)
         _ <- createCoin(coinId, coinName)
-        addCoinToWalletRes <- coinsRepository.addCoinToWallet(
+        addCoinToAccountRes <- coinsRepository.addCoinToAccount(
           coinId,
-          createdWalletId,
+          createdAccountId,
           coinValue
         )
-        loadedWalletCoin <- coinsRepository.loadWalletCoinById(
-          addCoinToWalletRes
+        loadedAccountCoin <- coinsRepository.loadAccountCoinById(
+          addCoinToAccountRes
         )
       } yield assertTrue({
-        coinId == loadedWalletCoin.getOrElse(throw new Exception()).coinId
+        coinId == loadedAccountCoin.getOrElse(throw new Exception()).coinId
       })
     },
     test("can update coin owned amount") {
@@ -72,27 +72,27 @@ object CoinsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
           user.passwordHash
         )
         userId = uuidEither.getOrElse(throw new Exception())
-        createdWallet <- walletsRepository.safeCreateWallet(
+        createdAccount <- accountsRepository.safeCreateAccount(
           userId,
           "BTC",
-          "test wallet"
+          "test account"
         )
-        createdWalletId <- ZIO.fromEither(createdWallet)
+        createdAccountId <- ZIO.fromEither(createdAccount)
         _ <- createCoin(coinId, coinName)
-        addCoinToWalletRes <- coinsRepository.addCoinToWallet(
+        addCoinToAccountRes <- coinsRepository.addCoinToAccount(
           coinId,
-          createdWalletId,
+          createdAccountId,
           coinValue
         )
-        _ <- coinsRepository.updateWalletCoinOwnedSatoshi(
-          addCoinToWalletRes,
+        _ <- coinsRepository.updateAccountCoinOwnedSatoshi(
+          addCoinToAccountRes,
           newValue
         )
-        loadedWalletCoin <- coinsRepository.loadWalletCoinById(
-          addCoinToWalletRes
+        loadedAccountCoin <- coinsRepository.loadAccountCoinById(
+          addCoinToAccountRes
         )
       } yield assertTrue(
-        loadedWalletCoin
+        loadedAccountCoin
           .getOrElse(throw Exception())
           .satoshis == newValue.satoshis
       )
@@ -115,34 +115,34 @@ object CoinsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
           user.passwordHash
         )
         userId = uuidEither.getOrElse(throw new Exception())
-        createdWallet <- walletsRepository.safeCreateWallet(
+        createdAccount <- accountsRepository.safeCreateAccount(
           userId,
           "BTC",
-          "test wallet"
+          "test account"
         )
-        createdWalletId <- ZIO.fromEither(createdWallet)
+        createdAccountId <- ZIO.fromEither(createdAccount)
         _ <- createCoin(coinId, coinName)
-        addCoinToWalletRes <- coinsRepository.addCoinToWallet(
+        addCoinToAccountRes <- coinsRepository.addCoinToAccount(
           coinId,
-          createdWalletId,
+          createdAccountId,
           coinValue
         )
-        createdWallet2 <- walletsRepository.safeCreateWallet(
+        createdAccount2 <- accountsRepository.safeCreateAccount(
           userId,
           "BTC",
-          "test wallet 2"
+          "test account 2"
         )
-        secondWallet <- ZIO.fromEither(createdWallet)
+        secondAccount <- ZIO.fromEither(createdAccount)
         failureFut <- coinsRepository
-          .addCoinToWallet(
+          .addCoinToAccount(
             coinId,
-            secondWallet,
+            secondAccount,
             overflowValue
           )
           .exit
       } yield assert(failureFut)(fails(isSubtype[PSQLException](anything)))
     },
-    test("should fail when wallet does not exist") {
+    test("should fail when account does not exist") {
       val user = UsersFixtures.nextUser()
       val coinId = UUID.randomUUID()
       val coinName = "Test Coin"
@@ -158,14 +158,14 @@ object CoinsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
           user.passwordHash
         )
         userId = uuidEither.getOrElse(throw new Exception())
-        addCoinToWalletRes <- coinsRepository
-          .addCoinToWallet(
+        addCoinToAccountRes <- coinsRepository
+          .addCoinToAccount(
             coinId,
             UUID.randomUUID(),
             coinValue
           )
           .exit
-      } yield assert(addCoinToWalletRes)(
+      } yield assert(addCoinToAccountRes)(
         fails(isSubtype[PSQLException](anything))
       )
     }
