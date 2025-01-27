@@ -40,7 +40,7 @@ object Responses {
 
   final case class LoadWalletResponse(
       id: UUID,
-      ownerId: UUID,
+      userId: UUID,
       walletName: String
   ) extends ServerResponse
 
@@ -48,7 +48,7 @@ object Responses {
     def fromWallet(wallet: Wallet) = {
       LoadWalletResponse(
         id = wallet.id,
-        ownerId = wallet.ownerId,
+        userId = wallet.userId,
         walletName = wallet.walletName
       )
     }
@@ -74,7 +74,7 @@ object Responses {
   }
 
   final case class LoadUserWithCoinsResponse(
-      ownerId: UUID,
+      userId: UUID,
       walletCoins: List[WalletCoin]
   ) extends ServerResponse
 

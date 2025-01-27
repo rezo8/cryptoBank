@@ -2,7 +2,6 @@ package models
 
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
-import java.sql.Timestamp
 import java.time.Instant
 import java.util.UUID
 

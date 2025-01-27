@@ -27,7 +27,13 @@ object UsersRepositorySpec extends ZIOSpecDefault with RepositorySpec {
         uuid = uuidEither.getOrElse(throw new Exception())
         loadedUserEither <- usersRepository.getUser(uuid)
         loadedUser <- ZIO.fromEither(loadedUserEither)
-      } yield assertTrue(user.copy(id = Some(uuid)) == loadedUser)
+      } yield assertTrue(
+        user.copy(
+          id = Some(uuid),
+          createdAt = loadedUser.createdAt,
+          updatedAt = loadedUser.updatedAt
+        ) == loadedUser
+      )
     },
     test("properly create and load user by email") {
       val user = UsersFixtures.nextUser()
@@ -44,7 +50,13 @@ object UsersRepositorySpec extends ZIOSpecDefault with RepositorySpec {
         uuid = uuidEither.getOrElse(throw new Exception())
         loadedUserEither <- usersRepository.getUserByEmail(user.email)
         loadedUser <- ZIO.fromEither(loadedUserEither)
-      } yield assertTrue(user.copy(id = Some(uuid)) == loadedUser)
+      } yield assertTrue(
+        user.copy(
+          id = Some(uuid),
+          createdAt = loadedUser.createdAt,
+          updatedAt = loadedUser.updatedAt
+        ) == loadedUser
+      )
     },
     test(
       "fails with UserAlreadyExists when creating a user with duplicate email"

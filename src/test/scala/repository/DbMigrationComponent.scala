@@ -12,6 +12,7 @@ trait DbMigrationComponent {
       Flyway
         .configure()
         .dataSource(dbConfig.url, dbConfig.user, dbConfig.password)
+        .locations("filesystem:flyway/sql")
         .load()
         .migrate()
     )

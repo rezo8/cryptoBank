@@ -1,7 +1,5 @@
 package httpServer
 
-import models.{CoinValue, User, UserType}
-import org.mindrot.jbcrypt.BCrypt
 import zio.json.{DeriveJsonDecoder, JsonDecoder}
 
 import java.util.UUID

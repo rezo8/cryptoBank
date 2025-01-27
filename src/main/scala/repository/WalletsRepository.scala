@@ -31,9 +31,9 @@ abstract class WalletsRepository {
 
   def getWalletByUserId(userId: UUID): Task[Either[ServerException, Wallet]] = {
     sql"""
-      SELECT id, ownerId, walletName
+      SELECT id, userId, walletName
       FROM wallets
-      WHERE ownerId = ${userId}
+      WHERE userId = ${userId}
     """
       .query[Wallet]
       .option
@@ -52,7 +52,7 @@ abstract class WalletsRepository {
       walletName: String
   ): IO[UUID] =
     sql"""
-      INSERT INTO wallets (ownerId, walletName)
+      INSERT INTO wallets (userId, walletName)
       VALUES ($userId, $walletName)
       RETURNING id
     """.query[UUID].unique.transact(transactor)

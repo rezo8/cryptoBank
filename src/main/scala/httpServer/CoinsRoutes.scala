@@ -69,7 +69,7 @@ abstract class CoinsRoutes extends RouteContainer {
         .loadCoinsForUser(id)
         .map(userWithCoins => {
           LoadUserWithCoinsResponse(
-            ownerId = userWithCoins.ownerId,
+            userId = userWithCoins.userId,
             walletCoins = userWithCoins.walletCoins
           )
         })

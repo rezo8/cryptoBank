@@ -92,7 +92,7 @@ abstract class CoinsRepository {
     sql"""
         SELECT wc.*
         FROM users u
-        JOIN wallets w ON u.id = w.ownerId
+        JOIN wallets w ON u.id = w.userId
         JOIN wallet_coins wc ON w.id = wc.walletId
         JOIN coins c ON wc.coinId = c.coinId
         WHERE u.id = $userId

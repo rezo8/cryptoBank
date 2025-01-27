@@ -40,7 +40,7 @@ object WalletsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       } yield assertTrue(
         loadedWallet == Wallet(
           id = createdWalletId,
-          ownerId = userId,
+          userId = userId,
           walletName = "test wallet"
         )
       )

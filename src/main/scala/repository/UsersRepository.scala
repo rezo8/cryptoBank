@@ -35,9 +35,8 @@ abstract class UsersRepository {
       phoneNumber,
       passwordHash
     )
-      .attemptSomeSqlState {
-        case sqlstate.class23.UNIQUE_VIOLATION => UserAlreadyExists()
-        case _                                 => Unexpected()
+      .attemptSomeSqlState { case sqlstate.class23.UNIQUE_VIOLATION =>
+        UserAlreadyExists()
       }
       .to[Task]
   }
@@ -45,7 +44,7 @@ abstract class UsersRepository {
   // Load user by ID
   def getUser(id: UUID): Task[Either[ServerException, User]] =
     sql"""
-      SELECT id, userTypeId, firstName, lastName, email, phoneNumber, passwordHash, created_at, updatedAt
+      SELECT id, userTypeId, firstName, lastName, email, phoneNumber, passwordHash, createdAt, updatedAt
       FROM users
       WHERE id = $id
     """
@@ -64,7 +63,7 @@ abstract class UsersRepository {
   // Load user by ID
   def getUserByEmail(email: String): Task[Either[ServerException, User]] =
     sql"""
-      SELECT id, userTypeId, firstName, lastName, email, phoneNumber, passwordHash, created_at, updatedAt
+      SELECT id, userTypeId, firstName, lastName, email, phoneNumber, passwordHash, createdAt, updatedAt
       FROM users
       WHERE email = $email
     """
@@ -90,8 +89,8 @@ abstract class UsersRepository {
       passwordHash: String
   ): IO[UUID] =
     sql"""
-      INSERT INTO users (firstName, userTypeId, firstName, lastName, email, phoneNumber, passwordHash, created_at, updatedAt)
-      VALUES (${firstName}, ${lastName}, ${email}, ${phoneNumber})
+      INSERT INTO users (userTypeId, firstName, lastName, email, phoneNumber, passwordHash)
+      VALUES ($userTypeId, $firstName, $lastName, $email, $phoneNumber, $passwordHash)
       RETURNING id
     """.query[UUID].unique.transact(transactor)
 
