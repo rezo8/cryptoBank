@@ -9,7 +9,7 @@ final case class Wallet(
     id: UUID,
     userId: UUID,
     currency: String, // TODO Make this an enum
-    balance: BigDecimal, // This is balance in whole, rather than satoshis.
+    balance: Long, // Stored in a low unit level. EX: Satoshi vs Bitcoin
     walletName: String,
     createdAt: Instant,
     updatedAt: Instant

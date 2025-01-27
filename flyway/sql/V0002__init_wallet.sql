@@ -3,7 +3,7 @@ CREATE TABLE wallets (
     walletId UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     userId UUID REFERENCES users(userId),
     currency VARCHAR(10) NOT NULL,
-    balance DECIMAL(20, 8) DEFAULT 0.0,
+    balance BIGINT DEFAULT 0,
     walletName VARCHAR(255),
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

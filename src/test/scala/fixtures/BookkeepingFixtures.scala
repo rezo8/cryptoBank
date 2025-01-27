@@ -45,7 +45,7 @@ object BookkeepingFixtures {
       id: UUID = java.util.UUID.randomUUID(),
       userId: UUID = java.util.UUID.randomUUID(),
       currency: String = "BTC",
-      balance: BigDecimal = BigDecimal(math.random()),
+      balance: Long = Random.nextLong(),
       walletName: String = Random.nextString(10),
       createdAt: Instant = Instant.now(),
       updatedAt: Instant = Instant.now()

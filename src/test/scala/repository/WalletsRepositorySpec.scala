@@ -44,7 +44,7 @@ object WalletsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
           id = createdWalletId,
           userId = userId,
           currency = "BTC",
-          balance = BigDecimal(0),
+          balance = 0,
           walletName = "test wallet",
           createdAt = loadedWallet.createdAt,
           updatedAt = loadedWallet.updatedAt
