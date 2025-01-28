@@ -30,6 +30,21 @@ abstract class AccountsRepository {
       .to[Task]
   }
 
+  def getAccountByAccountId(
+      accountId: UUID
+  ): Task[Either[ServerException, Account]] = {
+    sql"""
+         SELECT *
+         FROM accounts
+         WHERE accountId = $accountId
+       """
+      .query[Account]
+      .option
+      .transact(transactor)
+      .map(_.fold(Left(AccountIsMissingByAccountId(accountId)))(Right(_)))
+      .to[Task]
+  }
+
   def getAccountsByUserId(
       userId: UUID
   ): Task[Either[ServerException, List[Account]]] = {
@@ -43,7 +58,7 @@ abstract class AccountsRepository {
       .transact(transactor)
       .map(loaded => {
         if (loaded.isEmpty) {
-          Left(AccountIsMissingByUserUUID(userId))
+          Left(AccountIsMissingByUserId(userId))
         } else {
           Right(loaded)
         }
