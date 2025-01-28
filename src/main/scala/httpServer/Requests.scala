@@ -1,6 +1,5 @@
 package httpServer
 
-import models.{CoinValue, User}
 import zio.json.{DeriveJsonDecoder, JsonDecoder}
 
 import java.util.UUID
@@ -14,56 +13,48 @@ object Requests {
     implicit val decoder: JsonDecoder[LoadUserByEmailRequest] =
       DeriveJsonDecoder.gen[LoadUserByEmailRequest]
   }
+
+  // TODO send the password hash into the request, not the raw pw.
   final case class CreateUserRequest(
+      userType: String,
       firstName: String,
       lastName: String,
       email: String,
-      phoneNumber: String
-  ) {
-    def toUser(): User = {
-      User(
-        id = None,
-        firstName = firstName,
-        lastName = lastName,
-        email = email,
-        phoneNumber = phoneNumber
-      )
-    }
-  }
+      phoneNumber: String,
+      password: String
+  )
 
   object CreateUserRequest {
     implicit val decoder: JsonDecoder[CreateUserRequest] =
       DeriveJsonDecoder.gen[CreateUserRequest]
   }
 
-  final case class CreateWalletRequest(
+  final case class CreateAccountRequest(
       userId: UUID,
-      walletName: String
+      cryptoType: String, // TODO make this an enum
+      accountName: String
   )
 
-  object CreateWalletRequest {
-    implicit val decoder: JsonDecoder[CreateWalletRequest] =
-      DeriveJsonDecoder.gen[CreateWalletRequest]
+  object CreateAccountRequest {
+    implicit val decoder: JsonDecoder[CreateAccountRequest] =
+      DeriveJsonDecoder.gen[CreateAccountRequest]
   }
 
-  final case class CreateCoinRequest(coinId: UUID, coinName: String)
+  final case class CreateAddressRequest(
+      accountId: UUID,
+      addressLocation: String,
+      balance: Long
+  )
 
-  object CreateCoinRequest {
-    implicit val decoder: JsonDecoder[CreateCoinRequest] =
-      DeriveJsonDecoder.gen[CreateCoinRequest]
+  object CreateAddressRequest {
+    implicit val decoder: JsonDecoder[CreateAddressRequest] =
+      DeriveJsonDecoder.gen[CreateAddressRequest]
   }
 
-  final case class AddCoinToWalletRequest(satoshis: Long)
+  final case class UpdateAddressAmountRequest(satoshis: Long)
 
-  object AddCoinToWalletRequest {
-    implicit val decoder: JsonDecoder[AddCoinToWalletRequest] =
-      DeriveJsonDecoder.gen[AddCoinToWalletRequest]
-  }
-
-  final case class UpdateCoinAmountRequest(satoshis: Long)
-
-  object UpdateCoinAmountRequest {
-    implicit val decoder: JsonDecoder[UpdateCoinAmountRequest] =
-      DeriveJsonDecoder.gen[UpdateCoinAmountRequest]
+  object UpdateAddressAmountRequest {
+    implicit val decoder: JsonDecoder[UpdateAddressAmountRequest] =
+      DeriveJsonDecoder.gen[UpdateAddressAmountRequest]
   }
 }

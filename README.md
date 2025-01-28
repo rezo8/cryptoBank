@@ -20,7 +20,7 @@ The goal long term is not just to store internal transfers, but also to populate
 
 **Commands to Run from project dir (i.e., `bitcoin/`):**
 
-`docker-compose up`
+`docker-compose up --build`
 
 If running into issues, reset by running:
 

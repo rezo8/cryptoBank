@@ -18,6 +18,8 @@ lazy val root = project
       "org.tpolecat" %% "doobie-postgres" % "1.0.0-RC6",
       "org.tpolecat" %% "doobie-hikari" % "1.0.0-RC6",
 
+      "org.mindrot" % "jbcrypt" % "0.4",
+
       // Scalactic imports
       "org.scalactic" %% "scalactic" % "3.2.19",
       "org.scalatest" %% "scalatest" % "3.2.19" % Test,

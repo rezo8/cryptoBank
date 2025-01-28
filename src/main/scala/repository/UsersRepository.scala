@@ -20,39 +20,50 @@ abstract class UsersRepository {
   val transactor: Aux[IO, Unit]
 
   def safeCreateUser(
-      user: User
+      userTypeId: Int,
+      firstName: String,
+      lastName: String,
+      email: String,
+      phoneNumber: String,
+      passwordHash: String
   ): Task[Either[ServerException, UUID]] = {
-    createUser(user)
-      .attemptSomeSqlState {
-        case sqlstate.class23.UNIQUE_VIOLATION => UserAlreadyExists()
-        case _                                 => Unexpected()
+    createUser(
+      userTypeId,
+      firstName,
+      lastName,
+      email,
+      phoneNumber,
+      passwordHash
+    )
+      .attemptSomeSqlState { case sqlstate.class23.UNIQUE_VIOLATION =>
+        UserAlreadyExists()
       }
       .to[Task]
   }
 
-  // Load user by ID
-  def getUser(id: UUID): Task[Either[ServerException, User]] =
+  // Load user by userId
+  def getUser(userId: UUID): Task[Either[ServerException, User]] =
     sql"""
-      SELECT id, firstName, lastName, email, phoneNumber, created_at
+      SELECT userId, userTypeId, firstName, lastName, email, phoneNumber, passwordHash, createdAt, updatedAt
       FROM users
-      WHERE id = $id
+      WHERE userId = $userId
     """
       .query[User]
       .option
       .transact(transactor)
       .map(
         _.fold({
-          Left(UserIsMissingByUUID(id))
+          Left(UserIsMissingByUUID(userId))
         })(user => {
           Right(user)
         })
       )
       .to[Task]
 
-  // Load user by ID
+  // Load user by Email
   def getUserByEmail(email: String): Task[Either[ServerException, User]] =
     sql"""
-      SELECT id, firstName, lastName, email, phoneNumber, created_at
+      SELECT userId, userTypeId, firstName, lastName, email, phoneNumber, passwordHash, createdAt, updatedAt
       FROM users
       WHERE email = $email
     """
@@ -70,12 +81,17 @@ abstract class UsersRepository {
 
   // Insert user
   private def createUser(
-      user: User
+      userTypeId: Int,
+      firstName: String,
+      lastName: String,
+      email: String,
+      phoneNumber: String,
+      passwordHash: String
   ): IO[UUID] =
     sql"""
-      INSERT INTO users (firstName, lastName, email, phoneNumber)
-      VALUES (${user.firstName}, ${user.lastName}, ${user.email}, ${user.phoneNumber})
-      RETURNING id
+      INSERT INTO users (userTypeId, firstName, lastName, email, phoneNumber, passwordHash)
+      VALUES ($userTypeId, $firstName, $lastName, $email, $phoneNumber, $passwordHash)
+      RETURNING userId
     """.query[UUID].unique.transact(transactor)
 
 }

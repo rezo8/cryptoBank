@@ -31,7 +31,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"firstName\": \"{{$randomFirstName}}\",\n    \"lastName\": \"{{$randomLastName}}\",\n    \"email\": \"{{$randomEmail}}\",\n    \"phoneNumber\": \"{{$randomPhoneNumber}}\"\n}",
+							"raw": "{\n    \"firstName\": \"{{$randomFirstName}}\",\n    \"lastName\": \"{{$randomLastName}}\",\n    \"email\": \"{{$randomEmail}}\",\n    \"phoneNumber\": \"{{$randomPhoneNumber}}\",\n    \"userType\": \"customer\",\n    \"password\": \"ohnounsecure\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -94,17 +94,17 @@
 			]
 		},
 		{
-			"name": "Wallets",
+			"name": "Accounts",
 			"item": [
 				{
-					"name": "Add Wallet",
+					"name": "Add Account",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
 									"var jsonData = pm.response.json();",
-									"pm.collectionVariables.set(\"walletId\", jsonData.walletId);",
+									"pm.collectionVariables.set(\"accountId\", jsonData.accountId);",
 									""
 								],
 								"type": "text/javascript",
@@ -117,7 +117,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"userId\": \"{{userId}}\",\n    \"walletName\": \"testWallet\"\n}",
+							"raw": "{\n    \"userId\": \"{{userId}}\",\n    \"cryptoType\": \"BTC\",\n    \"accountName\": \"testWallet\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -125,13 +125,13 @@
 							}
 						},
 						"url": {
-							"raw": "localhost:8080/wallets/",
+							"raw": "localhost:8080/accounts/",
 							"host": [
 								"localhost"
 							],
 							"port": "8080",
 							"path": [
-								"wallets",
+								"accounts",
 								""
 							]
 						}
@@ -170,18 +170,18 @@
 					]
 				},
 				{
-					"name": "Get Wallet By ID",
+					"name": "Get Account By UserId",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "localhost:8080/wallets/userId/{{userId}}",
+							"raw": "localhost:8080/accounts/userId/{{userId}}",
 							"host": [
 								"localhost"
 							],
 							"port": "8080",
 							"path": [
-								"wallets",
+								"accounts",
 								"userId",
 								"{{userId}}"
 							]
@@ -242,7 +242,7 @@
 			"name": "Coins",
 			"item": [
 				{
-					"name": "Create Coin",
+					"name": "Create Address",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -259,7 +259,7 @@
 							"script": {
 								"exec": [
 									"var jsonData = pm.response.json();",
-									"pm.collectionVariables.set(\"coinId\", jsonData.coinId);",
+									"pm.collectionVariables.set(\"addressId\", jsonData.addressId);",
 									""
 								],
 								"type": "text/javascript",
@@ -272,7 +272,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"coinId\": \"{{$guid}}\",\n    \"coinName\" : \"Test Coin\"\n}",
+							"raw": "{\n    \"accountId\": \"{{accountId}}\",\n    \"addressLocation\": \"whereaddresslives\",\n    \"balance\": 50\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -280,20 +280,20 @@
 							}
 						},
 						"url": {
-							"raw": "localhost:8080/coins",
+							"raw": "localhost:8080/addresses",
 							"host": [
 								"localhost"
 							],
 							"port": "8080",
 							"path": [
-								"coins"
+								"addresses"
 							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "Get Coins for User",
+					"name": "Get Address for Account",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -310,73 +310,28 @@
 							}
 						},
 						"url": {
-							"raw": "localhost:8080/coins/userId/{{userId}}",
+							"raw": "localhost:8080/addresses/accountId/{{accountId}}",
 							"host": [
 								"localhost"
 							],
 							"port": "8080",
 							"path": [
-								"coins",
-								"userId",
-								"{{userId}}"
+								"addresses",
+								"accountId",
+								"{{accountId}}"
 							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "Add Coin To Wallet",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"var jsonData = pm.response.json();",
-									"pm.collectionVariables.set(\"walletCoinId\", jsonData.walletCoinId);",
-									""
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"satoshis\": 500\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "localhost:8080/coins/coinId/{{coinId}}/walletId/{{walletId}}",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"coins",
-								"coinId",
-								"{{coinId}}",
-								"walletId",
-								"{{walletId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Update coin value",
+					"name": "Update address value",
 					"request": {
 						"method": "PUT",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"satoshis\": 50\n}",
+							"raw": "{\n    \"satoshis\": 25\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -384,15 +339,15 @@
 							}
 						},
 						"url": {
-							"raw": "localhost:8080/coins/walletCoinId/{{walletCoinId}}",
+							"raw": "localhost:8080/addresses/addressId/{{addressId}}",
 							"host": [
 								"localhost"
 							],
 							"port": "8080",
 							"path": [
-								"coins",
-								"walletCoinId",
-								"{{walletCoinId}}"
+								"addresses",
+								"addressId",
+								"{{addressId}}"
 							]
 						}
 					},
@@ -420,6 +375,14 @@
 		},
 		{
 			"key": "walletCoinId",
+			"value": ""
+		},
+		{
+			"key": "accountId",
+			"value": ""
+		},
+		{
+			"key": "addressId",
 			"value": ""
 		}
 	]

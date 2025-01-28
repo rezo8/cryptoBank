@@ -44,13 +44,13 @@ class TransactionSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "correctly return all output Ids" in {
-    defaultTransaction.outputWalletIds().sorted should be(
+    defaultTransaction.outputAccountIds().sorted should be(
       outputs.keys.toSeq.sorted
     )
   }
 
   it should "correctly return all input Ids" in {
-    defaultTransaction.inputWalletIds().sorted should be(
+    defaultTransaction.inputAccountIds().sorted should be(
       inputs.keys.toSeq.sorted
     )
     print("passed")
