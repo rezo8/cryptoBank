@@ -27,6 +27,25 @@ abstract class AddressRepository {
     createAddressSql(accountId, address, balance.satoshis).to[Task]
   }
 
+  def getAddressByAddressId(
+      addressId: UUID
+  ): Task[Either[ServerException, Address]] = {
+    sql"""
+        SELECT *
+        FROM addresses
+        WHERE addressId = $addressId
+      """
+      .query[Address]
+      .option
+      .transact(transactor)
+      .map(loaded => {
+        loaded.fold(
+          Left(AddressIsMissingByAddressId(addressId))
+        )(Right(_))
+      })
+      .to[Task]
+  }
+
   def getAddressesByAccountId(
       accountId: UUID
   ): Task[Either[ServerException, List[Address]]] = {

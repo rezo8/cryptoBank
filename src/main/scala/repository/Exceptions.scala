@@ -37,9 +37,17 @@ object Exceptions {
     override def status: Status.Error = Status.Conflict
   }
 
-  case class AccountIsMissingByUserUUID(uuid: UUID) extends ServerException {
+  case class AccountIsMissingByUserId(userId: UUID) extends ServerException {
     override def getMessage: String =
-      s"Account with userId [$uuid] does not exist."
+      s"Account with userId [$userId] does not exist."
+
+    override def status: Status.Error = Status.NotFound
+  }
+
+  case class AccountIsMissingByAccountId(accountId: UUID)
+      extends ServerException {
+    override def getMessage: String =
+      s"Account with accountId [$accountId] does not exist."
 
     override def status: Status.Error = Status.NotFound
   }
@@ -54,6 +62,14 @@ object Exceptions {
       extends ServerException {
     override def getMessage: String =
       s"Address with accountId [$accountId] does not exist."
+
+    override def status: Status.Error = Status.NotFound
+  }
+
+  case class AddressIsMissingByAddressId(addressId: UUID)
+      extends ServerException {
+    override def getMessage: String =
+      s"Address with addressId [$addressId] does not exist."
 
     override def status: Status.Error = Status.NotFound
   }

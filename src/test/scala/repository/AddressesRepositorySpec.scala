@@ -21,42 +21,47 @@ object AddressesRepositorySpec extends ZIOSpecDefault with RepositorySpec {
   val accountsRepository: AccountsRepository = new AccountsRepository:
     override val transactor: Aux[IO, Unit] = testTransactor
 
+  // Shared setup logic
+  private def setupUserAccountAndAddress = for {
+    user <- ZIO.succeed(UsersFixtures.nextUser())
+    uuidEither <- usersRepository.safeCreateUser(
+      user.userTypeId,
+      user.firstName,
+      user.lastName,
+      user.email,
+      user.phoneNumber,
+      user.passwordHash
+    )
+    userId <- ZIO.fromEither(uuidEither)
+    createdAccount <- accountsRepository.safeCreateAccount(
+      userId,
+      "BTC",
+      "test account"
+    )
+    accountId <- ZIO.fromEither(createdAccount)
+    addressId <- addressRepository.createBitcoinAddress(
+      accountId,
+      addressLocation,
+      addressValue
+    )
+  } yield (user, userId, accountId, addressId)
+
+  private val addressLocation = "Test address loc"
+  private val addressValue =
+    BitcoinAddressValue.apply(Random.between(0L, 10_000_000L))
+
   def spec: Spec[Any, Throwable] = suite("AddressesRepositorySpec")(
     test("properly create and load address ") {
-      val user = UsersFixtures.nextUser()
-      val addressLocation = "Test address loc"
-      val addressValue =
-        BitcoinAddressValue.apply(Random.between(0L, 10_000_000L))
       for {
-        uuidEither <- usersRepository.safeCreateUser(
-          user.userTypeId,
-          user.firstName,
-          user.lastName,
-          user.email,
-          user.phoneNumber,
-          user.passwordHash
+        (_, _, accountId, addressId) <- setupUserAccountAndAddress
+        loadedAddressEither <- addressRepository.getAddressByAddressId(
+          addressId
         )
-        userId = uuidEither.getOrElse(throw new Exception())
-        createdAccount <- accountsRepository.safeCreateAccount(
-          userId,
-          "BTC",
-          "test account"
-        )
-        createdAccountId <- ZIO.fromEither(createdAccount)
-        _ <- addressRepository.createBitcoinAddress(
-          createdAccountId,
-          addressLocation,
-          addressValue
-        )
-        loadedAddressEither <- addressRepository.getAddressesByAccountId(
-          createdAccountId
-        )
-        loadedAddresses <- ZIO.fromEither(loadedAddressEither)
+        loadedAddress <- ZIO.fromEither(loadedAddressEither)
       } yield assertTrue({
-        val loadedAddress = loadedAddresses.head
         Address(
           addressId = loadedAddress.addressId,
-          accountId = createdAccountId,
+          accountId = accountId,
           address = addressLocation,
           balance = addressValue.satoshis,
           isActive = true,
@@ -66,43 +71,18 @@ object AddressesRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       })
     },
     test("can update address owned amount") {
-      val user = UsersFixtures.nextUser()
-      val addressId = UUID.randomUUID()
-      val addressLocation = "Test Address location"
-      val addressValue =
-        BitcoinAddressValue.apply(Random.between(0L, 10_000_000L))
       val newValue = BitcoinAddressValue(addressValue.satoshis - 1L)
       for {
-        uuidEither <- usersRepository.safeCreateUser(
-          user.userTypeId,
-          user.firstName,
-          user.lastName,
-          user.email,
-          user.phoneNumber,
-          user.passwordHash
-        )
-        userId = uuidEither.getOrElse(throw new Exception())
-        createdAccount <- accountsRepository.safeCreateAccount(
-          userId,
-          "BTC",
-          "test account"
-        )
-        createdAccountId <- ZIO.fromEither(createdAccount)
-        addressId <- addressRepository.createBitcoinAddress(
-          createdAccountId,
-          addressLocation,
-          addressValue
-        )
+        (_, _, accountId, addressId) <- setupUserAccountAndAddress
         _ <- addressRepository.updateBitcoinAddressValue(addressId, newValue)
-        loadedAddressEither <- addressRepository.getAddressesByAccountId(
-          createdAccountId
+        loadedAddressEither <- addressRepository.getAddressByAddressId(
+          addressId
         )
-        loadedAddresses <- ZIO.fromEither(loadedAddressEither)
+        loadedAddress <- ZIO.fromEither(loadedAddressEither)
       } yield assertTrue({
-        val loadedAddress = loadedAddresses.head
         Address(
           addressId = loadedAddress.addressId,
-          accountId = createdAccountId,
+          accountId = accountId,
           address = addressLocation,
           balance = newValue.satoshis,
           isActive = true,
@@ -111,27 +91,31 @@ object AddressesRepositorySpec extends ZIOSpecDefault with RepositorySpec {
         ) == loadedAddress
       })
     },
-    test("should fail when address does not exist") {
-      val user = UsersFixtures.nextUser()
-      val addressId = UUID.randomUUID()
-      val addressName = "Test Address"
-      val addressValue =
-        BitcoinAddressValue.apply(Random.between(0L, 10_000_000L))
-
+    test("can create and load multiple addresses for a user") {
+      val secondAddressLoc = "Test address loc 2"
       for {
-        uuidEither <- usersRepository.safeCreateUser(
-          user.userTypeId,
-          user.firstName,
-          user.lastName,
-          user.email,
-          user.phoneNumber,
-          user.passwordHash
+        (_, _, accountId, addressId) <- setupUserAccountAndAddress
+        addressId <- addressRepository.createBitcoinAddress(
+          accountId,
+          secondAddressLoc,
+          addressValue
         )
-        userId = uuidEither.getOrElse(throw new Exception())
+        loadedAddressesEither <- addressRepository.getAddressesByAccountId(
+          accountId
+        )
+        loadedAddresses <- ZIO.fromEither(loadedAddressesEither)
+      } yield assertTrue({
+        loadedAddresses.size == 2 && loadedAddresses.exists(
+          _.address == addressLocation
+        ) && loadedAddresses.exists(_.address == secondAddressLoc)
+      })
+    },
+    test("should fail when account does not exist") {
+      for {
         addAddressToAccountRes <- addressRepository
           .createBitcoinAddress(
             UUID.randomUUID(),
-            "test",
+            addressLocation,
             addressValue
           )
           .exit

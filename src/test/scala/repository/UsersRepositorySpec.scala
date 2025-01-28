@@ -12,47 +12,41 @@ object UsersRepositorySpec extends ZIOSpecDefault with RepositorySpec {
     override val transactor: Aux[IO, Unit] = testTransactor
   }
 
+  private def setupUser = for {
+    user <- ZIO.succeed(UsersFixtures.nextUser())
+    uuidEither <- usersRepository.safeCreateUser(
+      user.userTypeId,
+      user.firstName,
+      user.lastName,
+      user.email,
+      user.phoneNumber,
+      user.passwordHash
+    )
+    userId <- ZIO.fromEither(uuidEither)
+  } yield (user, userId)
+
   def spec: Spec[Any, Throwable] = suite("UsersRepositorySpec")(
     test("properly create and load user by id") {
-      val user = UsersFixtures.nextUser()
       for {
-        uuidEither <- usersRepository.safeCreateUser(
-          user.userTypeId,
-          user.firstName,
-          user.lastName,
-          user.email,
-          user.phoneNumber,
-          user.passwordHash
-        )
-        uuid = uuidEither.getOrElse(throw new Exception())
-        loadedUserEither <- usersRepository.getUser(uuid)
+        (user, userId) <- setupUser
+        loadedUserEither <- usersRepository.getUser(userId)
         loadedUser <- ZIO.fromEither(loadedUserEither)
       } yield assertTrue(
         user.copy(
-          userId = Some(uuid),
+          userId = Some(userId),
           createdAt = loadedUser.createdAt,
           updatedAt = loadedUser.updatedAt
         ) == loadedUser
       )
     },
     test("properly create and load user by email") {
-      val user = UsersFixtures.nextUser()
-
       for {
-        uuidEither <- usersRepository.safeCreateUser(
-          user.userTypeId,
-          user.firstName,
-          user.lastName,
-          user.email,
-          user.phoneNumber,
-          user.passwordHash
-        )
-        uuid = uuidEither.getOrElse(throw new Exception())
+        (user, userId) <- setupUser
         loadedUserEither <- usersRepository.getUserByEmail(user.email)
         loadedUser <- ZIO.fromEither(loadedUserEither)
       } yield assertTrue(
         user.copy(
-          userId = Some(uuid),
+          userId = Some(userId),
           createdAt = loadedUser.createdAt,
           updatedAt = loadedUser.updatedAt
         ) == loadedUser
@@ -61,19 +55,9 @@ object UsersRepositorySpec extends ZIOSpecDefault with RepositorySpec {
     test(
       "fails with UserAlreadyExists when creating a user with duplicate email"
     ) {
-      val user = UsersFixtures.nextUser()
-      val duplicateUser =
-        user.copy(phoneNumber = UsersFixtures.nextPhoneNumber())
-
       for {
-        createOne <- usersRepository.safeCreateUser(
-          user.userTypeId,
-          user.firstName,
-          user.lastName,
-          user.email,
-          user.phoneNumber,
-          user.passwordHash
-        )
+        (user, userId) <- setupUser
+        duplicateUser = user.copy(phoneNumber = UsersFixtures.nextPhoneNumber())
         createTwo <- usersRepository.safeCreateUser(
           duplicateUser.userTypeId,
           duplicateUser.firstName,

@@ -11,7 +11,9 @@ trait BaseServer extends ZIOAppDefault {
   def startServer: ZIO[Any, Throwable, Nothing] = {
     println("serving")
     Server
-      .serve(addressesRoutes.routes.++(userRoutes.routes).++(accountsRoutes.routes))
+      .serve(
+        addressesRoutes.routes.++(userRoutes.routes).++(accountsRoutes.routes)
+      )
       .provide(
         Server.live,
         ZLayer.succeed(Server.Config.default.port(8080))

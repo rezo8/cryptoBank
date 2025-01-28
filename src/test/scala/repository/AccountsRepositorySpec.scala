@@ -4,7 +4,7 @@ import cats.effect.*
 import doobie.util.transactor.Transactor.Aux
 import fixtures.UsersFixtures
 import models.Account
-import repository.Exceptions.{AccountAlreadyExists, AccountIsMissingByUserUUID}
+import repository.Exceptions.{AccountAlreadyExists, AccountIsMissingByUserId}
 import repository.UsersRepositorySpec.suite
 import zio.ZIO
 import zio.test.{Spec, TestAspect, ZIOSpecDefault, assertTrue}
@@ -17,31 +17,36 @@ object AccountsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
   val accountsRepository: AccountsRepository = new AccountsRepository:
     override val transactor: Aux[IO, Unit] = testTransactor
 
+  private def setupUserAndAccount = for {
+    user <- ZIO.succeed(UsersFixtures.nextUser())
+    uuidEither <- usersRepository.safeCreateUser(
+      user.userTypeId,
+      user.firstName,
+      user.lastName,
+      user.email,
+      user.phoneNumber,
+      user.passwordHash
+    )
+    userId <- ZIO.fromEither(uuidEither)
+    createdAccount <- accountsRepository.safeCreateAccount(
+      userId,
+      "BTC",
+      "test account"
+    )
+    accountId <- ZIO.fromEither(createdAccount)
+  } yield (user, userId, accountId)
+
   def spec: Spec[Any, Throwable] = suite("AccountsRepositorySpec")(
     test("properly create and load account ") {
-      val user = UsersFixtures.nextUser()
       for {
-        uuidEither <- usersRepository.safeCreateUser(
-          user.userTypeId,
-          user.firstName,
-          user.lastName,
-          user.email,
-          user.phoneNumber,
-          user.passwordHash
+        (_, userId, accountId) <- setupUserAndAccount
+        loadedAccountEither <- accountsRepository.getAccountByAccountId(
+          accountId
         )
-        userId = uuidEither.getOrElse(throw new Exception())
-        createdAccount <- accountsRepository.safeCreateAccount(
-          userId,
-          "BTC",
-          "test account"
-        )
-        createdAccountId <- ZIO.fromEither(createdAccount)
-        loadedAccountEither <- accountsRepository.getAccountsByUserId(userId)
-        loadedAccounts <- ZIO.fromEither(loadedAccountEither)
-        loadedAccount = loadedAccounts.head
+        loadedAccount <- ZIO.fromEither(loadedAccountEither)
       } yield assertTrue(
         loadedAccount == Account(
-          addressId = createdAccountId,
+          addressId = accountId,
           userId = userId,
           cryptoType = "BTC",
           balance = 0,
@@ -49,6 +54,25 @@ object AccountsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
           createdAt = loadedAccount.createdAt,
           updatedAt = loadedAccount.updatedAt
         )
+      )
+    },
+    test("properly create and load multiple account for user") {
+      for {
+        (_, userId, accountId) <- setupUserAndAccount
+        createdAccount2 <- accountsRepository.safeCreateAccount(
+          userId,
+          "ETH",
+          "test account"
+        )
+        accountId2 <- ZIO.fromEither(createdAccount2)
+        loadedAccountsEither <- accountsRepository.getAccountsByUserId(
+          userId
+        )
+        loadedAccounts <- ZIO.fromEither(loadedAccountsEither)
+      } yield assertTrue(
+        loadedAccounts.size == 2
+          && loadedAccounts.exists(_.cryptoType == "ETH")
+          && loadedAccounts.exists(_.cryptoType == "BTC")
       )
     },
     test(
@@ -60,38 +84,23 @@ object AccountsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       } yield assertTrue({
         missingAccount.left.getOrElse(
           throw new Exception()
-        ) == AccountIsMissingByUserUUID(randomId)
+        ) == AccountIsMissingByUserId(randomId)
       })
     },
     test(
       "fails with AccountAlreadyExists when trying to create two accounts for a user with same cryptoType"
     ) {
-      val user = UsersFixtures.nextUser()
-      val randomId = UUID.randomUUID()
       for {
-        uuidEither <- usersRepository.safeCreateUser(
-          user.userTypeId,
-          user.firstName,
-          user.lastName,
-          user.email,
-          user.phoneNumber,
-          user.passwordHash
-        )
-        uuid = uuidEither.getOrElse(throw new Exception())
-        createdAccount <- accountsRepository.safeCreateAccount(
-          uuid,
-          "BTC",
-          "test account"
-        )
+        (_, userId, _) <- setupUserAndAccount
         createdAccountFailure <- accountsRepository.safeCreateAccount(
-          uuid,
+          userId,
           "BTC",
           "test account"
         )
       } yield assertTrue({
         createdAccountFailure.left.getOrElse(
           throw new Exception()
-        ) == AccountAlreadyExists(uuid)
+        ) == AccountAlreadyExists(userId)
       })
     }
   ) @@ TestAspect.beforeAll(initializeDb)
