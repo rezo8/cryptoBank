@@ -1,6 +1,6 @@
 package utils
 
-import repository.Exceptions.ServerException
+import services.Exceptions.ServerException
 import zio.ZIO
 
 object ZioTypes {

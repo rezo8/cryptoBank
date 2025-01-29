@@ -4,9 +4,8 @@ import httpServer.Helpers.handleServerResponse
 import httpServer.Requests.{CreateAddressRequest, UpdateAddressAmountRequest}
 import httpServer.Responses.*
 import models.BitcoinAddressValue
-import repository.AddressRepository
-import repository.Exceptions.{Unexpected, UnparseableRequest}
 import services.AddressesService
+import services.Exceptions.{Unexpected, UnparseableRequest}
 import zio.*
 import zio.http.*
 import zio.json.*

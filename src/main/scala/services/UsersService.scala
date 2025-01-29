@@ -2,7 +2,7 @@ package services
 
 import doobie.postgres.sqlstate
 import models.User
-import repository.Exceptions.*
+import Exceptions.*
 import repository.UsersRepository
 import utils.ZioTypes.RezoTask
 import zio.*

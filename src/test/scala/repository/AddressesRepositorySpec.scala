@@ -33,7 +33,7 @@ object AddressesRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       user.passwordHash
     )
     userId <- ZIO.fromEither(uuidEither)
-    createdAccount <- accountsRepository.safeCreateAccount(
+    createdAccount <- accountsRepository.createAccount(
       userId,
       "BTC",
       "test account"

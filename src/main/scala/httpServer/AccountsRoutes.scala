@@ -3,10 +3,8 @@ package httpServer
 import httpServer.Helpers.handleServerResponse
 import httpServer.Requests.CreateAccountRequest
 import httpServer.Responses.{CreateAccountResponse, LoadAccountResponse}
-import models.Account
-import repository.AccountsRepository
-import repository.Exceptions.{Unexpected, UnparseableRequest}
 import services.AccountsService
+import services.Exceptions.{Unexpected, UnparseableRequest}
 import zio.*
 import zio.http.*
 import zio.json.*

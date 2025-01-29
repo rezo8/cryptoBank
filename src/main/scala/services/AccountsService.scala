@@ -2,7 +2,7 @@ package services
 
 import doobie.postgres.sqlstate
 import models.{Account, Address, BitcoinAddressValue, User}
-import repository.Exceptions.*
+import Exceptions.*
 import repository.{AccountsRepository, AddressRepository, UsersRepository}
 import utils.ZioTypes.RezoTask
 import zio.*
@@ -17,7 +17,7 @@ class AccountsService(accountsRepository: AccountsRepository) {
       accountName: String
   ): RezoTask[UUID] = {
     accountsRepository
-      .safeCreateAccount(userId, cryptoType, accountName)
+      .createAccount(userId, cryptoType, accountName)
       .mapError {
         // Sad i think I have to move this to Doobie Code. Do I abstract away to repo exceptions?
         case sqlstate.class23.UNIQUE_VIOLATION => AccountAlreadyExists(userId)

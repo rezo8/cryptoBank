@@ -4,7 +4,7 @@ import cats.effect.*
 import doobie.util.transactor.Transactor.Aux
 import fixtures.UsersFixtures
 import models.Account
-import repository.Exceptions.{AccountAlreadyExists, AccountIsMissingByUserId}
+import services.Exceptions.{AccountAlreadyExists, AccountIsMissingByUserId}
 import repository.UsersRepositorySpec.suite
 import zio.ZIO
 import zio.test.{Spec, TestAspect, ZIOSpecDefault, assertTrue}
@@ -28,7 +28,7 @@ object AccountsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       user.passwordHash
     )
     userId <- ZIO.fromEither(uuidEither)
-    createdAccount <- accountsRepository.safeCreateAccount(
+    createdAccount <- accountsRepository.createAccount(
       userId,
       "BTC",
       "test account"
@@ -59,7 +59,7 @@ object AccountsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
     test("properly create and load multiple account for user") {
       for {
         (_, userId, accountId) <- setupUserAndAccount
-        createdAccount2 <- accountsRepository.safeCreateAccount(
+        createdAccount2 <- accountsRepository.createAccount(
           userId,
           "ETH",
           "test account"
@@ -92,7 +92,7 @@ object AccountsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
     ) {
       for {
         (_, userId, _) <- setupUserAndAccount
-        createdAccountFailure <- accountsRepository.safeCreateAccount(
+        createdAccountFailure <- accountsRepository.createAccount(
           userId,
           "BTC",
           "test account"

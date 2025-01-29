@@ -2,7 +2,7 @@ package services
 
 import doobie.postgres.sqlstate
 import models.{Address, BitcoinAddressValue, User}
-import repository.Exceptions.*
+import Exceptions.*
 import repository.{AddressRepository, UsersRepository}
 import utils.ZioTypes.RezoTask
 import zio.*

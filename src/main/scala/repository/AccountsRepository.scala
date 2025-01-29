@@ -8,7 +8,6 @@ import doobie.postgres.*
 import doobie.postgres.implicits.*
 import doobie.util.transactor.Transactor.Aux
 import models.Account
-import repository.Exceptions.*
 import zio.*
 import zio.interop.catz.*
 
@@ -18,12 +17,17 @@ import java.util.UUID
 abstract class AccountsRepository {
   val transactor: Aux[IO, Unit]
 
-  def safeCreateAccount(
+  // TODO capture the sql stuff.
+  def createAccount(
       userId: UUID,
       cryptoType: String,
       accountName: String
   ): Task[UUID] = {
-    createAccount(userId, cryptoType, accountName).to[Task]
+    sql"""
+      INSERT INTO accounts (userId, cryptoType, accountName)
+      VALUES ($userId, $cryptoType, $accountName)
+      RETURNING accountId
+    """.query[UUID].unique.transact(transactor).to[Task]
   }
 
   def getAccountByAccountId(
@@ -53,17 +57,4 @@ abstract class AccountsRepository {
       .transact(transactor)
       .to[Task]
   }
-
-  // Insert Account
-  private def createAccount(
-      userId: UUID,
-      cryptoType: String,
-      accountName: String
-  ): IO[UUID] =
-    sql"""
-      INSERT INTO accounts (userId, cryptoType, accountName)
-      VALUES ($userId, $cryptoType, $accountName)
-      RETURNING accountId
-    """.query[UUID].unique.transact(transactor)
-
 }

@@ -5,8 +5,8 @@ import httpServer.Requests.CreateUserRequest
 import httpServer.Responses.LoadUserResponse
 import models.{User, UserType}
 import org.mindrot.jbcrypt.BCrypt
-import repository.Exceptions.{ServerException, Unexpected, UnparseableRequest}
 import repository.UsersRepository
+import services.Exceptions.{ServerException, Unexpected, UnparseableRequest}
 import services.UsersService
 import utils.ZioTypes.RezoTask
 import zio.*

@@ -1,7 +1,7 @@
 package httpServer
 
 import httpServer.Responses.ServerResponse
-import repository.Exceptions.ServerException
+import services.Exceptions.ServerException
 import utils.ZioTypes.RezoTask
 import zio.*
 import zio.http.*

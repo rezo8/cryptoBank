@@ -3,7 +3,7 @@ package repository
 import cats.effect.*
 import doobie.util.transactor.Transactor.Aux
 import fixtures.UsersFixtures
-import repository.Exceptions.UserAlreadyExists
+import services.Exceptions.UserAlreadyExists
 import zio.ZIO
 import zio.test.{Spec, TestAspect, ZIOSpecDefault, assertTrue}
 

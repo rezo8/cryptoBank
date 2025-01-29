@@ -8,7 +8,7 @@ import doobie.postgres.*
 import doobie.postgres.implicits.*
 import doobie.util.transactor.Transactor.Aux
 import models.{Account, Address, BitcoinAddressValue}
-import repository.Exceptions.*
+import services.Exceptions.*
 import zio.*
 import zio.interop.catz.*
 
