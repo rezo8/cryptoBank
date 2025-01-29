@@ -53,7 +53,7 @@ case class Transaction(
   }
 
   def transactionFee(): TransactionValue = {
-    return TransactionValue(
+    TransactionValue(
       this
         .totalInputs()
         .bitCoinChunk
