@@ -22,17 +22,13 @@ abstract class AccountsRepository {
       userId: UUID,
       cryptoType: String,
       accountName: String
-  ): Task[Either[ServerException, UUID]] = {
-    createAccount(userId, cryptoType, accountName)
-      .attemptSomeSqlState { case sqlstate.class23.UNIQUE_VIOLATION =>
-        AccountAlreadyExists(userId)
-      }
-      .to[Task]
+  ): Task[UUID] = {
+    createAccount(userId, cryptoType, accountName).to[Task]
   }
 
   def getAccountByAccountId(
       accountId: UUID
-  ): Task[Either[ServerException, Account]] = {
+  ): Task[Option[Account]] = {
     sql"""
          SELECT *
          FROM accounts
@@ -41,13 +37,12 @@ abstract class AccountsRepository {
       .query[Account]
       .option
       .transact(transactor)
-      .map(_.fold(Left(AccountIsMissingByAccountId(accountId)))(Right(_)))
       .to[Task]
   }
 
   def getAccountsByUserId(
       userId: UUID
-  ): Task[Either[ServerException, List[Account]]] = {
+  ): Task[List[Account]] = {
     sql"""
       SELECT *
       FROM accounts
@@ -56,13 +51,6 @@ abstract class AccountsRepository {
       .query[Account]
       .to[List]
       .transact(transactor)
-      .map(loaded => {
-        if (loaded.isEmpty) {
-          Left(AccountIsMissingByUserId(userId))
-        } else {
-          Right(loaded)
-        }
-      })
       .to[Task]
   }
 

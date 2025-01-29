@@ -14,11 +14,11 @@ import zio.interop.catz.*
 
 import java.util.UUID
 
-// TODO add service layer to move from DBException to a Server Exception
-//  rather than capturing here
+// Repository now fails fast with exceptions is goal.
 abstract class UsersRepository {
   val transactor: Aux[IO, Unit]
 
+  // TODO remove this
   def safeCreateUser(
       userTypeId: Int,
       firstName: String,
@@ -38,11 +38,10 @@ abstract class UsersRepository {
       .attemptSomeSqlState { case sqlstate.class23.UNIQUE_VIOLATION =>
         UserAlreadyExists()
       }
-      .to[Task]
   }
 
   // Load user by userId
-  def getUser(userId: UUID): Task[Either[ServerException, User]] =
+  def getUser(userId: UUID): Task[Option[User]] =
     sql"""
       SELECT userId, userTypeId, firstName, lastName, email, phoneNumber, passwordHash, createdAt, updatedAt
       FROM users
@@ -51,17 +50,10 @@ abstract class UsersRepository {
       .query[User]
       .option
       .transact(transactor)
-      .map(
-        _.fold({
-          Left(UserIsMissingByUUID(userId))
-        })(user => {
-          Right(user)
-        })
-      )
       .to[Task]
 
   // Load user by Email
-  def getUserByEmail(email: String): Task[Either[ServerException, User]] =
+  def getUserByEmail(email: String): Task[Option[User]] =
     sql"""
       SELECT userId, userTypeId, firstName, lastName, email, phoneNumber, passwordHash, createdAt, updatedAt
       FROM users
@@ -70,28 +62,21 @@ abstract class UsersRepository {
       .query[User]
       .option
       .transact(transactor)
-      .map(
-        _.fold({
-          Left(UserIsMissingByEmail(email))
-        })(user => {
-          Right(user)
-        })
-      )
       .to[Task]
 
   // Insert user
-  private def createUser(
+  def createUser(
       userTypeId: Int,
       firstName: String,
       lastName: String,
       email: String,
       phoneNumber: String,
       passwordHash: String
-  ): IO[UUID] =
+  ): Task[UUID] =
     sql"""
       INSERT INTO users (userTypeId, firstName, lastName, email, phoneNumber, passwordHash)
       VALUES ($userTypeId, $firstName, $lastName, $email, $phoneNumber, $passwordHash)
       RETURNING userId
-    """.query[UUID].unique.transact(transactor)
+    """.query[UUID].unique.transact(transactor).to[Task]
 
 }

@@ -1,10 +1,12 @@
 package httpServer
 
-import httpServer.Helpers.handleRepositoryProcess
+import httpServer.Helpers.handleServerResponse
 import httpServer.Requests.CreateAccountRequest
 import httpServer.Responses.{CreateAccountResponse, LoadAccountResponse}
 import models.Account
 import repository.AccountsRepository
+import repository.Exceptions.{Unexpected, UnparseableRequest}
+import services.AccountsService
 import zio.*
 import zio.http.*
 import zio.json.*
@@ -14,7 +16,7 @@ import java.util.UUID
 import scala.concurrent.ExecutionContext
 
 abstract class AccountsRoutes extends RouteContainer {
-  val accountsRepository: AccountsRepository
+  val accountsService: AccountsService
   implicit val ec: ExecutionContext
   private val rootUrl = "accounts"
 
@@ -26,25 +28,27 @@ abstract class AccountsRoutes extends RouteContainer {
   )
 
   private def handleLoadByUserId(id: UUID): ZIO[Any, Nothing, Response] = {
-    handleRepositoryProcess[LoadAccountResponse](for {
-      loadRes <- accountsRepository.getAccountsByUserId(id)
-    } yield loadRes.map(LoadAccountResponse(_)))
+    handleServerResponse[LoadAccountResponse](for {
+      loadRes <- accountsService.getAccountsByUserId(id)
+    } yield LoadAccountResponse(loadRes))
   }
 
   private def handleCreateAccount(
       req: Request
   ): ZIO[Any, Nothing, Response] = {
-    handleRepositoryProcess[CreateAccountResponse](for {
-      userBodyString <- req.body.asString
+    handleServerResponse[CreateAccountResponse](for {
+      userBodyString <- req.body.asString.mapError(Unexpected(_))
       createAccountRequest <- ZIO.fromEither(
-        userBodyString.fromJson[CreateAccountRequest]
+        userBodyString
+          .fromJson[CreateAccountRequest]
+          .left
+          .map(UnparseableRequest(_))
       )
-      createRes <- accountsRepository
-        .safeCreateAccount(
-          createAccountRequest.userId,
-          createAccountRequest.cryptoType,
-          createAccountRequest.accountName
-        )
-    } yield createRes.map(accountId => CreateAccountResponse(accountId)))
+      accountId <- accountsService.createAccount(
+        createAccountRequest.userId,
+        createAccountRequest.cryptoType,
+        createAccountRequest.accountName
+      )
+    } yield CreateAccountResponse(accountId))
   }
 }

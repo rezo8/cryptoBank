@@ -24,12 +24,12 @@ abstract class AddressRepository {
       address: String,
       balance: BitcoinAddressValue
   ): Task[UUID] = {
-    createAddressSql(accountId, address, balance.satoshis).to[Task]
+    createAddressSql(accountId, address, balance.satoshis)
   }
 
   def getAddressByAddressId(
       addressId: UUID
-  ): Task[Either[ServerException, Address]] = {
+  ): Task[Option[Address]] = {
     sql"""
         SELECT *
         FROM addresses
@@ -38,17 +38,12 @@ abstract class AddressRepository {
       .query[Address]
       .option
       .transact(transactor)
-      .map(loaded => {
-        loaded.fold(
-          Left(AddressIsMissingByAddressId(addressId))
-        )(Right(_))
-      })
       .to[Task]
   }
 
   def getAddressesByAccountId(
       accountId: UUID
-  ): Task[Either[ServerException, List[Address]]] = {
+  ): Task[List[Address]] = {
     sql"""
       SELECT *
       FROM addresses
@@ -57,13 +52,6 @@ abstract class AddressRepository {
       .query[Address]
       .to[List]
       .transact(transactor)
-      .map(loaded => {
-        if (loaded.isEmpty) {
-          Left(AddressIsMissingByAccountUUID(accountId))
-        } else {
-          Right(loaded)
-        }
-      })
       .to[Task]
   }
 
@@ -99,15 +87,15 @@ abstract class AddressRepository {
       RETURNING accountId
     """.query[UUID].unique.transact(transactor)
 
-  private def createAddressSql(
+  def createAddressSql(
       accountId: UUID,
       address: String,
       balance: Long
-  ): IO[UUID] = {
+  ): Task[UUID] = {
     sql"""
       INSERT INTO addresses (accountId, address, balance)
       VALUES ($accountId, $address, $balance)
       RETURNING addressId
-    """.query[UUID].unique.transact(transactor)
+    """.query[UUID].unique.transact(transactor).to[Task]
   }
 }

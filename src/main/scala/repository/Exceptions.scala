@@ -53,9 +53,16 @@ object Exceptions {
   }
 
   // TODO have take in root exception
-  case class Unexpected() extends ServerException {
+  case class Unexpected(exception: Throwable) extends ServerException {
     override def getMessage: String =
-      "Unexpected Exception"
+      s"Unexpected Exception: ${exception.getMessage}"
+  }
+
+  case class UnparseableRequest(badField: String) extends ServerException {
+    override def getMessage: String =
+      s"Bad Request with error on field: ${badField}"
+
+    override def status: Status.Error = Status.BadRequest
   }
 
   case class AddressIsMissingByAccountUUID(accountId: UUID)
