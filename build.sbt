@@ -6,6 +6,8 @@ val zioVersion = "2.1.14"
 
 ThisBuild / scalaVersion := scala3Version
 
+resolvers += "Maven Central" at "https://repo1.maven.org/maven2/"
+
 lazy val root = project
   .in(file("."))
   .settings(
@@ -45,9 +47,6 @@ lazy val root = project
       "dev.zio" %% "zio-test-magnolia" % zioVersion % Test,
       "dev.zio" %% "zio-test-junit" % zioVersion % Test,
       "dev.zio" %% "zio-mock" % "1.0.0-RC12" % Test,
-
-      // Mockito
-      "org.mockito" %% "mockito-scala" % "1.17.14" % Test, // Mockito for Scala
 
       // cats
       "org.typelevel" %% "cats-effect-testing-scalatest" % "1.6.0"

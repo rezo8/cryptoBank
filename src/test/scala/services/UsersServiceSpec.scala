@@ -1,54 +1,220 @@
 package services
 
-import org.scalamock.scalatest.MockFactory
-import org.scalamock.stubs.Stubs
-import org.scalatest.funsuite.AnyFunSuite
-import org.scalatest.matchers.should.Matchers
-import repository.UsersRepository
-import repository.UsersRepositorySpec.suite
+import models.User
+import repository.Exceptions.{
+  MissingUserByEmail,
+  MissingUserById,
+  UnexpectedError,
+  UniqueViolationUser
+}
+import repository.UsersRepositoryTrait
+import repository.mocks.UsersRepositoryMock
+import services.Exceptions.{DatabaseConflict, MissingDatabaseObject, Unexpected}
 import zio.*
+import zio.mock.Expectation.*
 import zio.test.*
 import zio.test.Assertion.*
 
+import java.time.Instant
 import java.util.UUID
-import scala.annotation.experimental
 
-@experimental
 object UsersServiceSpec extends ZIOSpecDefault {
 
-  def spec: Spec[Any, Throwable] = suite("UsersServiceSpec")()
+  val userId: UUID = UUID.randomUUID()
+  val userTypeId = 1
+  val firstName = "John"
+  val lastName = "Doe"
+  val email = "john.doe@example.com"
+  val phoneNumber = "1234567890"
+  val passwordHash = "hash"
+  val user: User = User(
+    Some(userId),
+    userTypeId,
+    firstName,
+    lastName,
+    email,
+    phoneNumber,
+    passwordHash,
+    Instant.now,
+    Instant.now
+  )
+  def spec: Spec[Any, Throwable] = suite("UsersServiceSpec")(
+    suite("#createUser") {
+      val program = for {
+        usersService <- ZIO.service[UsersService]
+        result <- usersService.createUser(
+          userTypeId,
+          firstName,
+          lastName,
+          email,
+          phoneNumber,
+          passwordHash
+        )
+      } yield result
+      Seq(
+        test("returns a UUID on success") {
+          val mockEnv: ULayer[UsersRepositoryTrait] =
+            UsersRepositoryMock
+              .CreateUser(
+                equalTo(
+                  (
+                    userTypeId,
+                    firstName,
+                    lastName,
+                    email,
+                    phoneNumber,
+                    passwordHash
+                  )
+                ),
+                value(userId)
+              )
+              .toLayer
 
-//  val mockUsersRepository: UsersRepository = mock[UsersRepository]
-//  val usersService = new UsersService(mockUsersRepository)
-//
-//  def spec: Spec[Any, Throwable] = suite("UsersServiceSpec")(
-//    suite("createUser") {
-//      test("succeeds with created user") {
-//        val userId = UUID.randomUUID()
-//        this.mockUsersRepository.createUser
-//          .expects(
-//            1,
-//            "John",
-//            "Doe",
-//            "john.doe@example.com",
-//            "1234567890",
-//            "hashedPassword"
-//          )
-//          .returning(ZIO.succeed(userId))
-//          .once()
-//
-//        //          .returning(ZIO.succeed(userId))
-//        for {
-//          result <- usersService.createUser(
-//            userTypeId = 1,
-//            firstName = "John",
-//            lastName = "Doe",
-//            email = "john.doe@example.com",
-//            phoneNumber = "1234567890",
-//            passwordHash = "hashedPassword"
-//          )
-//        } yield assert(result)(equalTo(userId))
-//      }
-//    }
-//  ) // @@ TestAspect.beforeAll(ZIO.succeed(reset(mockUsersRepository)))
+          assertZIO(program.provideLayer(mockEnv >>> UsersService.live))(
+            equalTo(userId)
+          )
+        },
+        test("fails with UniqueViolation response on UniqueViolationUser") {
+          val uniqueViolationUser = UniqueViolationUser(email, phoneNumber)
+          val mockEnv: ULayer[UsersRepositoryTrait] =
+            UsersRepositoryMock
+              .CreateUser(
+                equalTo(
+                  (
+                    userTypeId,
+                    firstName,
+                    lastName,
+                    email,
+                    phoneNumber,
+                    passwordHash
+                  )
+                ),
+                failure(uniqueViolationUser)
+              )
+              .toLayer
+
+          assertZIO(program.exit)(
+            fails(
+              equalTo(DatabaseConflict(uniqueViolationUser.getMessage))
+            )
+          ).provideLayer(mockEnv >>> UsersService.live)
+        },
+        test("fails with Unexpected response on unexpected error") {
+          val randomException = UnexpectedError("test")
+
+          val mockEnv: ULayer[UsersRepositoryTrait] =
+            UsersRepositoryMock
+              .CreateUser(
+                equalTo(
+                  (
+                    userTypeId,
+                    firstName,
+                    lastName,
+                    email,
+                    phoneNumber,
+                    passwordHash
+                  )
+                ),
+                failure(randomException)
+              )
+              .toLayer
+
+          assertZIO(program.exit)(fails(equalTo(Unexpected(randomException))))
+            .provideLayer(mockEnv >>> UsersService.live)
+        }
+      )
+    },
+    suite("getUserByEmail") {
+      val email = "john.doe@example.com"
+      val program = for {
+        usersService <- ZIO.service[UsersService]
+        result <- usersService.getUserByEmail(email)
+      } yield result
+      Seq(
+        test("returns a User on success") {
+          val mockEnv: ULayer[UsersRepositoryTrait] =
+            UsersRepositoryMock
+              .GetUserByEmail(equalTo(email), value(user))
+              .toLayer
+
+          assertZIO(program.provideLayer(mockEnv >>> UsersService.live))(
+            equalTo(user)
+          )
+        },
+        test("fails with MissingDatabaseObject on MissingUserByEmail error") {
+          val missingUserByEmail = MissingUserByEmail(email)
+          val mockEnv: ULayer[UsersRepositoryTrait] =
+            UsersRepositoryMock
+              .GetUserByEmail(
+                equalTo(email),
+                failure(missingUserByEmail)
+              )
+              .toLayer
+
+          assertZIO(program.exit)(
+            fails(
+              equalTo(MissingDatabaseObject(missingUserByEmail.getMessage))
+            )
+          ).provideLayer(mockEnv >>> UsersService.live)
+        },
+        test("fails with Unexpected response on unexpected error") {
+          val randomException = UnexpectedError("test")
+          val mockEnv: ULayer[UsersRepositoryTrait] =
+            UsersRepositoryMock
+              .GetUserByEmail(
+                equalTo(email),
+                failure(randomException)
+              )
+              .toLayer
+
+          assertZIO(program.exit)(fails(equalTo(Unexpected(randomException))))
+            .provideLayer(mockEnv >>> UsersService.live)
+        }
+      )
+    },
+    suite("getUserById") {
+      val program = for {
+        usersService <- ZIO.service[UsersService]
+        result <- usersService.getUserById(userId)
+      } yield result
+      Seq(
+        test("returns a User on success") {
+          val mockEnv: ULayer[UsersRepositoryTrait] =
+            UsersRepositoryMock
+              .GetUser(equalTo(userId), value(user))
+              .toLayer
+
+          assertZIO(program.provideLayer(mockEnv >>> UsersService.live))(
+            equalTo(user)
+          )
+        },
+        test("fails with MissingDatabaseObject on MissingUserByEmail error") {
+          val missingUserById = MissingUserById(userId)
+          val mockEnv: ULayer[UsersRepositoryTrait] =
+            UsersRepositoryMock
+              .GetUser(equalTo(userId), failure(missingUserById))
+              .toLayer
+
+          assertZIO(program.exit)(
+            fails(
+              equalTo(MissingDatabaseObject(missingUserById.getMessage))
+            )
+          ).provideLayer(mockEnv >>> UsersService.live)
+        },
+        test("fails with Unexpected response on unexpected error") {
+          val randomException = UnexpectedError("test")
+          val mockEnv: ULayer[UsersRepositoryTrait] =
+            UsersRepositoryMock
+              .GetUser(equalTo(userId), failure(randomException))
+              .toLayer
+
+          assertZIO(program.exit)(
+            fails(
+              equalTo(Unexpected(randomException))
+            )
+          ).provideLayer(mockEnv >>> UsersService.live)
+        }
+      )
+    }
+  )
 }

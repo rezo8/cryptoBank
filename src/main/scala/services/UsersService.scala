@@ -1,13 +1,14 @@
 package services
 
 import models.User
-import repository.UsersRepository
+import repository.UsersRepositoryTrait
 import utils.ZioTypes.RezoTask
 import zio.*
 
 import java.util.UUID
 
-class UsersService(usersRepository: UsersRepository) extends RepositoryService {
+class UsersService(usersRepository: UsersRepositoryTrait)
+    extends RepositoryService {
 
   def createUser(
       userTypeId: Int,
@@ -40,4 +41,9 @@ class UsersService(usersRepository: UsersRepository) extends RepositoryService {
       .getUserByEmail(email)
       .mapError(handleRepositoryExceptions)
   }
+}
+
+object UsersService {
+  val live: URLayer[UsersRepositoryTrait, UsersService] =
+    ZLayer.fromFunction(new UsersService(_))
 }

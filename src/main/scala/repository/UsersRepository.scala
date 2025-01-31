@@ -16,7 +16,22 @@ import zio.interop.catz.*
 
 import java.util.UUID
 
-class UsersRepository(transactor: Aux[IO, Unit]) {
+trait UsersRepositoryTrait {
+  def getUser(userId: UUID): RezoDBTask[User]
+
+  def getUserByEmail(email: String): RezoDBTask[User]
+
+  def createUser(
+      userTypeId: Int,
+      firstName: String,
+      lastName: String,
+      email: String,
+      phoneNumber: String,
+      passwordHash: String
+  ): RezoDBTask[UUID]
+}
+
+class UsersRepository(transactor: Aux[IO, Unit]) extends UsersRepositoryTrait {
 
   // Load user by userId
   def getUser(userId: UUID): RezoDBTask[User] =
