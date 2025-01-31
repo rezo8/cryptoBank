@@ -31,15 +31,11 @@ object Server extends ZIOAppDefault with BaseServer {
     )
 
   // Repositories
-  private val addressRepository = new AddressesRepository {
-    override val transactor: Aux[IO, Unit] = main.transactor
-  }
+  private val addressRepository = new AddressesRepository(main.transactor)
 
-  private val usersRepository = new UsersRepository:
-    override val transactor: Aux[effect.IO, Unit] = main.transactor
+  private val usersRepository = new UsersRepository(main.transactor)
 
-  private val accountsRepository = new AccountsRepository:
-    override val transactor: Aux[effect.IO, Unit] = main.transactor
+  private val accountsRepository = new AccountsRepository(main.transactor)
 
   // Routes
   override val addressesRoutes: AddressesRoutes = new AddressesRoutes:

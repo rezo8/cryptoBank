@@ -1,8 +1,6 @@
 package services
 
-import doobie.postgres.sqlstate
 import models.User
-import Exceptions.*
 import repository.UsersRepository
 import utils.ZioTypes.RezoTask
 import zio.*
@@ -29,7 +27,6 @@ class UsersService(usersRepository: UsersRepository) extends RepositoryService {
         passwordHash = passwordHash
       )
       .mapError(handleRepositoryExceptions)
-
   }
 
   def getUserById(userId: UUID): RezoTask[User] = {
@@ -42,10 +39,5 @@ class UsersService(usersRepository: UsersRepository) extends RepositoryService {
     usersRepository
       .getUserByEmail(email)
       .mapError(handleRepositoryExceptions)
-    //      .mapBoth(
-    //        error => Unexpected(error),
-    //        _.fold(Left(UserIsMissingByEmail(email)))(user => Right(user))
-    //      )
-    //      .absolve
   }
 }

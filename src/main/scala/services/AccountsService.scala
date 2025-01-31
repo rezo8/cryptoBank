@@ -2,13 +2,7 @@ package services
 
 import models.Account
 import repository.AccountsRepository
-import repository.Exceptions.{
-  MissingEntry,
-  RepositoryException,
-  UniqueViolation,
-  UniqueViolationUserCryptoType
-}
-import services.Exceptions.*
+import repository.Exceptions.RepositoryException
 import utils.ZioTypes.RezoTask
 import zio.*
 

@@ -16,9 +16,7 @@ import zio.test.Assertion.*
 import java.util.UUID
 
 object UsersRepositorySpec extends ZIOSpecDefault with RepositorySpec {
-  val usersRepository: UsersRepository = new UsersRepository {
-    override val transactor: Aux[IO, Unit] = testTransactor
-  }
+  val usersRepository: UsersRepository = new UsersRepository(testTransactor)
 
   private def setupUser = for {
     user <- ZIO.succeed(UsersFixtures.nextUser())

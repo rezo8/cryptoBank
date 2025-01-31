@@ -2,7 +2,6 @@ package services
 
 import models.{Address, BitcoinAddressValue}
 import repository.AddressesRepository
-import services.Exceptions.*
 import utils.ZioTypes.RezoTask
 import zio.*
 

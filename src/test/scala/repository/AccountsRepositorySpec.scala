@@ -18,10 +18,10 @@ import zio.test.Assertion.*
 import java.util.UUID
 
 object AccountsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
-  val usersRepository: UsersRepository = new UsersRepository:
-    override val transactor: Aux[IO, Unit] = testTransactor
-  val accountsRepository: AccountsRepository = new AccountsRepository:
-    override val transactor: Aux[IO, Unit] = testTransactor
+  val usersRepository: UsersRepository = new UsersRepository(testTransactor)
+  val accountsRepository: AccountsRepository = new AccountsRepository(
+    testTransactor
+  )
 
   val defaultCryptoType = "BTC"
   private def setupUserAndAccount = for {

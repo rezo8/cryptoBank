@@ -18,12 +18,13 @@ import java.util.UUID
 import scala.util.Random
 
 object AddressesRepositorySpec extends ZIOSpecDefault with RepositorySpec {
-  val accountsRepository: AccountsRepository = new AccountsRepository:
-    override val transactor: Aux[IO, Unit] = testTransactor
-  val addressRepository: AddressesRepository = new AddressesRepository:
-    override val transactor: Aux[IO, Unit] = testTransactor
-  val usersRepository: UsersRepository = new UsersRepository:
-    override val transactor: Aux[IO, Unit] = testTransactor
+  val accountsRepository: AccountsRepository = new AccountsRepository(
+    testTransactor
+  )
+  val addressRepository: AddressesRepository = new AddressesRepository(
+    testTransactor
+  )
+  val usersRepository: UsersRepository = new UsersRepository(testTransactor)
 
   // Shared setup logic
   private def setupUserAccountAndAddress = for {

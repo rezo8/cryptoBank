@@ -17,8 +17,7 @@ import zio.interop.catz.*
 import java.time.Instant
 import java.util.UUID
 
-abstract class AccountsRepository {
-  val transactor: Aux[IO, Unit]
+class AccountsRepository(transactor: Aux[IO, Unit]) {
 
   def createAccount(
       userId: UUID,

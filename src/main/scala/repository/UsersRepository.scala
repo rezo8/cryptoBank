@@ -16,9 +16,7 @@ import zio.interop.catz.*
 
 import java.util.UUID
 
-// Repository now fails fast with exceptions is goal.
-abstract class UsersRepository {
-  val transactor: Aux[IO, Unit]
+class UsersRepository(transactor: Aux[IO, Unit]) {
 
   // Load user by userId
   def getUser(userId: UUID): RezoDBTask[User] =

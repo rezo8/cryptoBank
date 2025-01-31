@@ -8,15 +8,8 @@ import doobie.postgres.*
 import doobie.postgres.implicits.*
 import doobie.util.invariant.UnexpectedEnd
 import doobie.util.transactor.Transactor.Aux
-import models.{Address, BitcoinAddressValue}
-import repository.Exceptions.{
-  ExcessiveUpdateAddresses,
-  MissingAccountByAccountId,
-  MissingAddressByAddressId,
-  RepositoryException,
-  UnexpectedError,
-  UniqueViolationAccountIdAddress
-}
+import models.Address
+import repository.Exceptions.*
 import utils.ZioTypes.RezoDBTask
 import zio.*
 import zio.interop.catz.*
@@ -24,8 +17,7 @@ import zio.interop.catz.*
 import java.time.Instant
 import java.util.UUID
 
-abstract class AddressesRepository {
-  val transactor: Aux[IO, Unit]
+class AddressesRepository(transactor: Aux[IO, Unit]) {
 
   def createAddressSql(
       accountId: UUID,
