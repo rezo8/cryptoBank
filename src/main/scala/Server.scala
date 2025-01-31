@@ -6,7 +6,7 @@ import doobie.util.transactor.Transactor
 import doobie.util.transactor.Transactor.Aux
 import httpServer.{AccountsRoutes, AddressesRoutes, BaseServer, UserRoutes}
 import pureconfig.ConfigSource
-import repository.{AccountsRepository, AddressRepository, UsersRepository}
+import repository.{AccountsRepository, AddressesRepository, UsersRepository}
 import services.{AccountsService, AddressesService, UsersService}
 import zio.*
 
@@ -31,7 +31,7 @@ object Server extends ZIOAppDefault with BaseServer {
     )
 
   // Repositories
-  private val addressRepository = new AddressRepository {
+  private val addressRepository = new AddressesRepository {
     override val transactor: Aux[IO, Unit] = main.transactor
   }
 

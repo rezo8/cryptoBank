@@ -17,7 +17,6 @@ lazy val root = project
       "org.tpolecat" %% "doobie-core" % "1.0.0-RC6",
       "org.tpolecat" %% "doobie-postgres" % "1.0.0-RC6",
       "org.tpolecat" %% "doobie-hikari" % "1.0.0-RC6",
-
       "org.mindrot" % "jbcrypt" % "0.4",
 
       // Scalactic imports
@@ -54,7 +53,7 @@ lazy val root = project
 
 enablePlugins(FlywayPlugin)
 
-assemblyMergeStrategy in assembly := {
+ThisBuild / assemblyMergeStrategy := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard
   case "application.conf"            => MergeStrategy.concat
   case "reference.conf"              => MergeStrategy.concat

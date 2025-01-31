@@ -1,15 +1,21 @@
 package services
 
-import doobie.postgres.sqlstate
-import models.{Account, Address, BitcoinAddressValue, User}
-import Exceptions.*
-import repository.{AccountsRepository, AddressRepository, UsersRepository}
+import models.Account
+import repository.AccountsRepository
+import repository.Exceptions.{
+  MissingEntry,
+  RepositoryException,
+  UniqueViolation,
+  UniqueViolationUserCryptoType
+}
+import services.Exceptions.*
 import utils.ZioTypes.RezoTask
 import zio.*
 
 import java.util.UUID
 
-class AccountsService(accountsRepository: AccountsRepository) {
+class AccountsService(accountsRepository: AccountsRepository)
+    extends RepositoryService {
 
   def createAccount(
       userId: UUID,
@@ -18,11 +24,7 @@ class AccountsService(accountsRepository: AccountsRepository) {
   ): RezoTask[UUID] = {
     accountsRepository
       .createAccount(userId, cryptoType, accountName)
-      .mapError {
-        // Sad i think I have to move this to Doobie Code. Do I abstract away to repo exceptions?
-        case sqlstate.class23.UNIQUE_VIOLATION => AccountAlreadyExists(userId)
-        case e                                 => Unexpected(e)
-      }
+      .mapError(handleRepositoryExceptions)
   }
 
   def getAccountByAccountId(
@@ -30,16 +32,21 @@ class AccountsService(accountsRepository: AccountsRepository) {
   ): RezoTask[Account] = {
     accountsRepository
       .getAccountByAccountId(accountId)
-      .mapBoth(
-        error => Unexpected(error),
-        _.fold(Left(AccountIsMissingByAccountId(accountId)))(Right(_))
-      )
-      .absolve
+      .mapError(handleRepositoryExceptions)
   }
 
   def getAccountsByUserId(userId: UUID): RezoTask[List[Account]] = {
     accountsRepository
       .getAccountsByUserId(userId)
-      .mapError(e => Unexpected(e))
+      .mapError(handleRepositoryExceptions)
+  }
+
+  def getAccountsByUserIdAndCryptoType(
+      userId: UUID,
+      cryptoType: String
+  ): RezoTask[Account] = {
+    accountsRepository
+      .getAccountsByUserIdAndCryptoType(userId, cryptoType)
+      .mapError(handleRepositoryExceptions)
   }
 }

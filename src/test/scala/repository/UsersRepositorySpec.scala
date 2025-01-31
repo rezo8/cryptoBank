@@ -3,9 +3,17 @@ package repository
 import cats.effect.*
 import doobie.util.transactor.Transactor.Aux
 import fixtures.UsersFixtures
-import services.Exceptions.UserAlreadyExists
+import repository.Exceptions.{
+  MissingUserByEmail,
+  MissingUserById,
+  UniqueViolationUser
+}
+import repository.UsersRepositorySpec.test
 import zio.ZIO
-import zio.test.{Spec, TestAspect, ZIOSpecDefault, assertTrue}
+import zio.test.*
+import zio.test.Assertion.*
+
+import java.util.UUID
 
 object UsersRepositorySpec extends ZIOSpecDefault with RepositorySpec {
   val usersRepository: UsersRepository = new UsersRepository {
@@ -14,7 +22,7 @@ object UsersRepositorySpec extends ZIOSpecDefault with RepositorySpec {
 
   private def setupUser = for {
     user <- ZIO.succeed(UsersFixtures.nextUser())
-    uuidEither <- usersRepository.safeCreateUser(
+    userId <- usersRepository.createUser(
       user.userTypeId,
       user.firstName,
       user.lastName,
@@ -22,15 +30,13 @@ object UsersRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       user.phoneNumber,
       user.passwordHash
     )
-    userId <- ZIO.fromEither(uuidEither)
   } yield (user, userId)
 
   def spec: Spec[Any, Throwable] = suite("UsersRepositorySpec")(
     test("properly create and load user by id") {
       for {
         (user, userId) <- setupUser
-        loadedUserEither <- usersRepository.getUser(userId)
-        loadedUser <- ZIO.fromEither(loadedUserEither)
+        loadedUser <- usersRepository.getUser(userId)
       } yield assertTrue(
         user.copy(
           userId = Some(userId),
@@ -42,8 +48,7 @@ object UsersRepositorySpec extends ZIOSpecDefault with RepositorySpec {
     test("properly create and load user by email") {
       for {
         (user, userId) <- setupUser
-        loadedUserEither <- usersRepository.getUserByEmail(user.email)
-        loadedUser <- ZIO.fromEither(loadedUserEither)
+        loadedUser <- usersRepository.getUserByEmail(user.email)
       } yield assertTrue(
         user.copy(
           userId = Some(userId),
@@ -53,23 +58,49 @@ object UsersRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       )
     },
     test(
-      "fails with UserAlreadyExists when creating a user with duplicate email"
+      "fails with MissingUserById when user does not exist when loading by id"
+    ) {
+      val randomId = UUID.randomUUID()
+      assertZIO(usersRepository.getUser(randomId).exit)(
+        fails(equalTo(MissingUserById(randomId)))
+      )
+    },
+    test(
+      "fails with MissingUserByEmail when user does not exist when loading by email"
+    ) {
+      val randomEmail = "invalid email"
+      assertZIO(usersRepository.getUserByEmail(randomEmail).exit)(
+        fails(equalTo(MissingUserByEmail(randomEmail)))
+      )
+    },
+    test(
+      "fails with UniqueViolationUser when creating a user with duplicate email"
     ) {
       for {
         (user, userId) <- setupUser
         duplicateUser = user.copy(phoneNumber = UsersFixtures.nextPhoneNumber())
-        createTwo <- usersRepository.safeCreateUser(
-          duplicateUser.userTypeId,
-          duplicateUser.firstName,
-          duplicateUser.lastName,
-          duplicateUser.email,
-          duplicateUser.phoneNumber,
-          duplicateUser.passwordHash
-        )
-      } yield assertTrue({
-        val error = createTwo.left
-        error.getOrElse(throw new Exception()) == UserAlreadyExists()
-      })
+        test <- assertZIO(
+          usersRepository
+            .createUser(
+              duplicateUser.userTypeId,
+              duplicateUser.firstName,
+              duplicateUser.lastName,
+              duplicateUser.email,
+              duplicateUser.phoneNumber,
+              duplicateUser.passwordHash
+            )
+            .exit
+        )({
+          fails(
+            equalTo(
+              UniqueViolationUser(
+                duplicateUser.email,
+                duplicateUser.phoneNumber
+              )
+            )
+          )
+        })
+      } yield test
     }
   ) @@ TestAspect.beforeAll(initializeDb)
     @@ TestAspect.afterAll(closeDb)

@@ -6,9 +6,11 @@ import doobie.*
 import doobie.implicits.*
 import doobie.postgres.*
 import doobie.postgres.implicits.*
+import doobie.util.invariant.UnexpectedEnd
 import doobie.util.transactor.Transactor.Aux
 import models.User
-import services.Exceptions.*
+import repository.Exceptions.*
+import utils.ZioTypes.RezoDBTask
 import zio.*
 import zio.interop.catz.*
 
@@ -18,51 +20,37 @@ import java.util.UUID
 abstract class UsersRepository {
   val transactor: Aux[IO, Unit]
 
-  // TODO remove this
-  def safeCreateUser(
-      userTypeId: Int,
-      firstName: String,
-      lastName: String,
-      email: String,
-      phoneNumber: String,
-      passwordHash: String
-  ): Task[Either[ServerException, UUID]] = {
-    createUser(
-      userTypeId,
-      firstName,
-      lastName,
-      email,
-      phoneNumber,
-      passwordHash
-    )
-      .attemptSomeSqlState { case sqlstate.class23.UNIQUE_VIOLATION =>
-        UserAlreadyExists()
-      }
-  }
-
   // Load user by userId
-  def getUser(userId: UUID): Task[Option[User]] =
+  def getUser(userId: UUID): RezoDBTask[User] =
     sql"""
       SELECT userId, userTypeId, firstName, lastName, email, phoneNumber, passwordHash, createdAt, updatedAt
       FROM users
       WHERE userId = $userId
     """
       .query[User]
-      .option
+      .unique
       .transact(transactor)
       .to[Task]
+      .mapError({
+        case UnexpectedEnd => MissingUserById(userId)
+        case e @ _         => UnexpectedError(e.getMessage)
+      })
 
   // Load user by Email
-  def getUserByEmail(email: String): Task[Option[User]] =
+  def getUserByEmail(email: String): RezoDBTask[User] =
     sql"""
       SELECT userId, userTypeId, firstName, lastName, email, phoneNumber, passwordHash, createdAt, updatedAt
       FROM users
       WHERE email = $email
     """
       .query[User]
-      .option
+      .unique
       .transact(transactor)
       .to[Task]
+      .mapError({
+        case UnexpectedEnd => MissingUserByEmail(email)
+        case e @ _         => UnexpectedError(e.getMessage)
+      })
 
   // Insert user
   def createUser(
@@ -72,11 +60,24 @@ abstract class UsersRepository {
       email: String,
       phoneNumber: String,
       passwordHash: String
-  ): Task[UUID] =
+  ): RezoDBTask[UUID] =
     sql"""
       INSERT INTO users (userTypeId, firstName, lastName, email, phoneNumber, passwordHash)
       VALUES ($userTypeId, $firstName, $lastName, $email, $phoneNumber, $passwordHash)
       RETURNING userId
-    """.query[UUID].unique.transact(transactor).to[Task]
+    """
+      .query[UUID]
+      .unique
+      .transact(transactor)
+      .attemptSomeSqlState { case sqlstate.class23.UNIQUE_VIOLATION =>
+        UniqueViolationUser(email, phoneNumber)
+      }
+      .to[Task]
+      .absolve
+      .mapError({
+        case r if r.isInstanceOf[RepositoryException] => // Don't like this hack. TODO figure out
+          r.asInstanceOf[RepositoryException]
+        case e @ _ => UnexpectedError(e.getMessage)
+      })
 
 }

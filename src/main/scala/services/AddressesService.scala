@@ -1,15 +1,15 @@
 package services
 
-import doobie.postgres.sqlstate
-import models.{Address, BitcoinAddressValue, User}
-import Exceptions.*
-import repository.{AddressRepository, UsersRepository}
+import models.{Address, BitcoinAddressValue}
+import repository.AddressesRepository
+import services.Exceptions.*
 import utils.ZioTypes.RezoTask
 import zio.*
 
 import java.util.UUID
 
-class AddressesService(addressRepository: AddressRepository) {
+class AddressesService(addressRepository: AddressesRepository)
+    extends RepositoryService {
 
   def createBitcoinAddress(
       accountId: UUID,
@@ -18,7 +18,7 @@ class AddressesService(addressRepository: AddressRepository) {
   ): RezoTask[UUID] = {
     addressRepository
       .createAddressSql(accountId, address, balance.satoshis)
-      .mapError(e => Unexpected(e))
+      .mapError(handleRepositoryExceptions)
   }
 
   def getAddressByAddressId(
@@ -26,17 +26,13 @@ class AddressesService(addressRepository: AddressRepository) {
   ): RezoTask[Address] = {
     addressRepository
       .getAddressByAddressId(addressId)
-      .mapBoth(
-        error => Unexpected(error),
-        _.fold(Left(AddressIsMissingByAddressId(addressId)))(Right(_))
-      )
-      .absolve
+      .mapError(handleRepositoryExceptions)
   }
 
   def getAddressesByAccountId(accountId: UUID): RezoTask[List[Address]] = {
     addressRepository
       .getAddressesByAccountId(accountId)
-      .mapError(e => Unexpected(e))
+      .mapError(handleRepositoryExceptions)
   }
 
   def updateBitcoinAddressValue(
@@ -44,7 +40,7 @@ class AddressesService(addressRepository: AddressRepository) {
       addressValue: BitcoinAddressValue
   ): RezoTask[RuntimeFlags] = {
     addressRepository
-      .updateBitcoinAddressValue(addressId, addressValue)
-      .mapError(e => Unexpected(e))
+      .updateAddressValue(addressId, addressValue.satoshis)
+      .mapError(handleRepositoryExceptions)
   }
 }

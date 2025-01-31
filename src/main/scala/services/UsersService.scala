@@ -9,7 +9,7 @@ import zio.*
 
 import java.util.UUID
 
-class UsersService(usersRepository: UsersRepository) {
+class UsersService(usersRepository: UsersRepository) extends RepositoryService {
 
   def createUser(
       userTypeId: Int,
@@ -28,29 +28,24 @@ class UsersService(usersRepository: UsersRepository) {
         phoneNumber = phoneNumber,
         passwordHash = passwordHash
       )
-      .mapError({
-        case sqlstate.class23.UNIQUE_VIOLATION => UserAlreadyExists()
-        case e                                 => Unexpected(e)
-      })
+      .mapError(handleRepositoryExceptions)
+
   }
 
   def getUserById(userId: UUID): RezoTask[User] = {
     usersRepository
       .getUser(userId)
-      .mapBoth(
-        error => Unexpected(error),
-        _.fold(Left(UserIsMissingByUUID(userId)))(user => Right(user))
-      )
-      .absolve
+      .mapError(handleRepositoryExceptions)
   }
 
   def getUserByEmail(email: String): RezoTask[User] = {
     usersRepository
       .getUserByEmail(email)
-      .mapBoth(
-        error => Unexpected(error),
-        _.fold(Left(UserIsMissingByEmail(email)))(user => Right(user))
-      )
-      .absolve
+      .mapError(handleRepositoryExceptions)
+    //      .mapBoth(
+    //        error => Unexpected(error),
+    //        _.fold(Left(UserIsMissingByEmail(email)))(user => Right(user))
+    //      )
+    //      .absolve
   }
 }
