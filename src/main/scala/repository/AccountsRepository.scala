@@ -17,7 +17,28 @@ import zio.interop.catz.*
 import java.time.Instant
 import java.util.UUID
 
-class AccountsRepository(transactor: Aux[IO, Unit]) {
+trait AccountsRepositoryTrait {
+  def createAccount(
+      userId: UUID,
+      cryptoType: String,
+      accountName: String
+  ): RezoDBTask[UUID]
+
+  def getAccountByAccountId(
+      accountId: UUID
+  ): RezoDBTask[Account]
+
+  def getAccountsByUserId(
+      userId: UUID
+  ): RezoDBTask[List[Account]]
+
+  def getAccountsByUserIdAndCryptoType(
+      userId: UUID,
+      cryptoType: String
+  ): RezoDBTask[Account]
+}
+class AccountsRepository(transactor: Aux[IO, Unit])
+    extends AccountsRepositoryTrait {
 
   def createAccount(
       userId: UUID,

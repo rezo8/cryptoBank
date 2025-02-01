@@ -1,14 +1,14 @@
 package services
 
 import models.Account
-import repository.AccountsRepository
+import repository.{AccountsRepository, AccountsRepositoryTrait}
 import repository.Exceptions.RepositoryException
 import utils.ZioTypes.RezoTask
 import zio.*
 
 import java.util.UUID
 
-class AccountsService(accountsRepository: AccountsRepository)
+class AccountsService(accountsRepository: AccountsRepositoryTrait)
     extends RepositoryService {
 
   def createAccount(
@@ -43,4 +43,8 @@ class AccountsService(accountsRepository: AccountsRepository)
       .getAccountsByUserIdAndCryptoType(userId, cryptoType)
       .mapError(handleRepositoryExceptions)
   }
+}
+object AccountsService {
+  val live: URLayer[AccountsRepositoryTrait, AccountsService] =
+    ZLayer.fromFunction(new AccountsService(_))
 }

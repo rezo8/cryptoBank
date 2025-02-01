@@ -20,7 +20,7 @@ abstract class AddressesRoutes extends RouteContainer {
 
   override val routes: Routes[Any, Response] = Routes(
     Method.POST / rootUrl -> handler { handleCreateAddress(_) },
-    Method.PUT / rootUrl / "addressId" / zio.http.uuid("addressId")
+    Method.PUT / rootUrl / "accountId" / zio.http.uuid("accountId")
       -> handler { (addressId: UUID, req: Request) =>
         handleUpdateAddressValue(addressId, req)
       },

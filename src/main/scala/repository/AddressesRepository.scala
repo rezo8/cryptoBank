@@ -28,7 +28,7 @@ class AddressesRepository(transactor: Aux[IO, Unit])
     sql"""
         INSERT INTO addresses (accountId, address, balance)
         VALUES ($accountId, $address, $balance)
-        RETURNING addressId
+        RETURNING accountId
       """
       .query[UUID]
       .unique
@@ -55,7 +55,7 @@ class AddressesRepository(transactor: Aux[IO, Unit])
     sql"""
         SELECT *
         FROM addresses
-        WHERE addressId = $addressId
+        WHERE accountId = $addressId
       """
       .query[Address]
       .unique
@@ -91,7 +91,7 @@ class AddressesRepository(transactor: Aux[IO, Unit])
     sql"""
          UPDATE addresses
          SET balance = $addressValue
-         WHERE addressId = $addressId
+         WHERE accountId = $addressId
        """.stripMargin.update.run
       .transact(transactor)
       .map(effectedRows => {

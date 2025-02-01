@@ -48,11 +48,11 @@ object AddressesRepositorySpec extends ZIOSpecDefault with RepositorySpec {
     )
   } yield (user, userId, accountId, addressId)
 
-  private val addressLocation = "Test addressName loc"
+  private val addressLocation = "Test cryptoType loc"
   private val addressValue = Random.between(0L, 10_000_000L)
 
   def spec: Spec[Any, Throwable] = suite("AddressesRepositorySpec")(
-    test("properly create and load addressName ") {
+    test("properly create and load cryptoType ") {
       for {
         (_, _, accountId, addressId) <- setupUserAccountAndAddress
         loadedAddress <- addressRepository.getAddressByAddressId(addressId)
@@ -68,7 +68,7 @@ object AddressesRepositorySpec extends ZIOSpecDefault with RepositorySpec {
         ) == loadedAddress
       })
     },
-    test("can update addressName owned amount") {
+    test("can update cryptoType owned amount") {
       val newValue = addressValue - 1L
       for {
         (_, _, accountId, addressId) <- setupUserAccountAndAddress
@@ -89,7 +89,7 @@ object AddressesRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       })
     },
     test("can create and load multiple addresses for a user") {
-      val secondAddressLoc = "Test addressName loc 2"
+      val secondAddressLoc = "Test cryptoType loc 2"
       for {
         (_, _, accountId, addressId) <- setupUserAccountAndAddress
         addressId <- addressRepository.createAddress(
@@ -119,7 +119,7 @@ object AddressesRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       )(fails(equalTo(MissingAccountByAccountId(randomId))))
     },
     test(
-      "fails with UniqueViolationAccountIdAddress when account already has addressName"
+      "fails with UniqueViolationAccountIdAddress when account already has cryptoType"
     ) {
       for {
         (_, _, accountId, addressId) <- setupUserAccountAndAddress
@@ -139,7 +139,7 @@ object AddressesRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       } yield test
     },
     test(
-      "fails with MissingAddressByAddressId when addressName does not exist"
+      "fails with MissingAddressByAddressId when cryptoType does not exist"
     ) {
       val randomId = UUID.randomUUID()
       assertZIO(
@@ -149,7 +149,7 @@ object AddressesRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       )(fails(equalTo(MissingAddressByAddressId(randomId))))
     },
     test(
-      "fails with MissingAddressByAddressId when addressName does not exist on update"
+      "fails with MissingAddressByAddressId when cryptoType does not exist on update"
     ) {
       val randomId = UUID.randomUUID()
       assertZIO(

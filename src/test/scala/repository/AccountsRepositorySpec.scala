@@ -50,7 +50,7 @@ object AccountsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
         )
       } yield assertTrue(
         loadedAccount == Account(
-          addressId = accountId,
+          accountId = accountId,
           userId = userId,
           cryptoType = defaultCryptoType,
           balance = 0,
@@ -69,7 +69,7 @@ object AccountsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
           .getAccountsByUserIdAndCryptoType(userId, defaultCryptoType)
       } yield assertTrue(
         loadedAccount == Account(
-          addressId = accountId,
+          accountId = accountId,
           userId = userId,
           cryptoType = defaultCryptoType,
           balance = 0,

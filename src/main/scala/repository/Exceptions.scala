@@ -32,7 +32,7 @@ object Exceptions {
 
   case class MissingAddressByAddressId(addressId: UUID) extends MissingEntry {
     override def getMessage: String =
-      s"Address with addressId [${addressId.toString}] does not exist."
+      s"Address with accountId [${addressId.toString}] does not exist."
   }
 
   case class MissingAccountByAccountId(accountId: UUID) extends MissingEntry {

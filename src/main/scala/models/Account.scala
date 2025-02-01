@@ -6,7 +6,7 @@ import java.time.Instant
 import java.util.UUID
 
 final case class Account(
-    addressId: UUID,
+    accountId: UUID,
     userId: UUID,
     cryptoType: String, // TODO Make this an enum
     balance: Long, // Stored in a low unit level. EX: Satoshi vs Bitcoin

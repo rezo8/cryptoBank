@@ -21,7 +21,7 @@ import java.util.UUID
 object AddressesServiceSpec extends ZIOSpecDefault {
 
   val accountId: UUID = UUID.randomUUID()
-  val addressName = "test addressName"
+  val addressName = "test cryptoType"
   val balance = BitcoinAddressValue(math.random().toLong)
 
   val defaultAddress = nextAddress()
