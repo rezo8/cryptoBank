@@ -6,7 +6,8 @@ import doobie.util.transactor.Transactor
 import doobie.util.transactor.Transactor.Aux
 import httpServer.{AccountsRoutes, AddressesRoutes, BaseServer, UserRoutes}
 import pureconfig.ConfigSource
-import repository.{AccountsRepository, AddressRepository, UsersRepository}
+import repository.{AccountsRepository, AddressesRepository, UsersRepository}
+import services.{AccountsService, AddressesService, UsersService}
 import zio.*
 
 import scala.concurrent.ExecutionContext
@@ -30,30 +31,28 @@ object Server extends ZIOAppDefault with BaseServer {
     )
 
   // Repositories
-  private val addressRepository = new AddressRepository {
-    override val transactor: Aux[IO, Unit] = main.transactor
-  }
+  private val addressRepository = new AddressesRepository(main.transactor)
 
-  private val usersRepository = new UsersRepository:
-    override val transactor: Aux[effect.IO, Unit] = main.transactor
+  private val usersRepository = new UsersRepository(main.transactor)
 
-  private val accountsRepository = new AccountsRepository:
-    override val transactor: Aux[effect.IO, Unit] = main.transactor
+  private val accountsRepository = new AccountsRepository(main.transactor)
 
   // Routes
   override val addressesRoutes: AddressesRoutes = new AddressesRoutes:
-    override val addressRepository: AddressRepository = main.addressRepository
+    override val addressesService: AddressesService =
+      AddressesService(main.addressRepository)
+
     override implicit val ec: ExecutionContext =
       scala.concurrent.ExecutionContext.Implicits.global
 
   override val userRoutes: UserRoutes = new UserRoutes:
+    override val usersService: UsersService = UsersService(main.usersRepository)
     override implicit val ec: ExecutionContext =
       scala.concurrent.ExecutionContext.Implicits.global
-    override val usersRepository: UsersRepository = main.usersRepository
 
   override val accountsRoutes: AccountsRoutes = new AccountsRoutes:
-    override val accountsRepository: AccountsRepository =
-      main.accountsRepository
+    override val accountsService: AccountsService =
+      AccountsService(main.accountsRepository)
     override implicit val ec: ExecutionContext =
       scala.concurrent.ExecutionContext.Implicits.global
 

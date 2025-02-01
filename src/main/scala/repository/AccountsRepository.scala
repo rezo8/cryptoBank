@@ -6,48 +6,90 @@ import doobie.*
 import doobie.implicits.*
 import doobie.postgres.*
 import doobie.postgres.implicits.*
+import doobie.util.invariant.UnexpectedEnd
 import doobie.util.transactor.Transactor.Aux
 import models.Account
 import repository.Exceptions.*
+import utils.ZioTypes.RezoDBTask
 import zio.*
 import zio.interop.catz.*
 
 import java.time.Instant
 import java.util.UUID
 
-abstract class AccountsRepository {
-  val transactor: Aux[IO, Unit]
-
-  def safeCreateAccount(
+trait AccountsRepositoryTrait {
+  def createAccount(
       userId: UUID,
       cryptoType: String,
       accountName: String
-  ): Task[Either[ServerException, UUID]] = {
-    createAccount(userId, cryptoType, accountName)
-      .attemptSomeSqlState { case sqlstate.class23.UNIQUE_VIOLATION =>
-        AccountAlreadyExists(userId)
+  ): RezoDBTask[UUID]
+
+  def getAccountByAccountId(
+      accountId: UUID
+  ): RezoDBTask[Account]
+
+  def getAccountsByUserId(
+      userId: UUID
+  ): RezoDBTask[List[Account]]
+
+  def getAccountsByUserIdAndCryptoType(
+      userId: UUID,
+      cryptoType: String
+  ): RezoDBTask[Account]
+}
+class AccountsRepository(transactor: Aux[IO, Unit])
+    extends AccountsRepositoryTrait {
+
+  def createAccount(
+      userId: UUID,
+      cryptoType: String,
+      accountName: String
+  ): RezoDBTask[UUID] = {
+    sql"""
+      INSERT INTO accounts (userId, cryptoType, accountName)
+      VALUES ($userId, $cryptoType, $accountName)
+      RETURNING accountId
+    """
+      .query[UUID]
+      .unique
+      .attemptSomeSqlState {
+        case sqlstate.class23.UNIQUE_VIOLATION =>
+          UniqueViolationUserCryptoType(userId, cryptoType)
+        case sqlstate.class23.FOREIGN_KEY_VIOLATION =>
+          ForeignKeyViolationUser(userId)
       }
+      .transact(transactor)
       .to[Task]
+      .absolve
+      .mapError({
+        case err if err.isInstanceOf[RepositoryException] =>
+          err.asInstanceOf[RepositoryException]
+        case e @ _ => UnexpectedError(e.getMessage)
+      })
   }
 
   def getAccountByAccountId(
       accountId: UUID
-  ): Task[Either[ServerException, Account]] = {
+  ): RezoDBTask[Account] = {
     sql"""
          SELECT *
          FROM accounts
          WHERE accountId = $accountId
        """
       .query[Account]
-      .option
+      .unique
       .transact(transactor)
-      .map(_.fold(Left(AccountIsMissingByAccountId(accountId)))(Right(_)))
       .to[Task]
+      .mapError({
+        case UnexpectedEnd => MissingAccountByAccountId(accountId)
+        case e @ _         => UnexpectedError(e.getMessage)
+      })
+
   }
 
   def getAccountsByUserId(
       userId: UUID
-  ): Task[Either[ServerException, List[Account]]] = {
+  ): RezoDBTask[List[Account]] = {
     sql"""
       SELECT *
       FROM accounts
@@ -56,26 +98,29 @@ abstract class AccountsRepository {
       .query[Account]
       .to[List]
       .transact(transactor)
-      .map(loaded => {
-        if (loaded.isEmpty) {
-          Left(AccountIsMissingByUserId(userId))
-        } else {
-          Right(loaded)
-        }
-      })
       .to[Task]
+      .mapError({ case e @ _ =>
+        UnexpectedError(e.getMessage)
+      })
   }
 
-  // Insert Account
-  private def createAccount(
+  def getAccountsByUserIdAndCryptoType(
       userId: UUID,
-      cryptoType: String,
-      accountName: String
-  ): IO[UUID] =
+      cryptoType: String
+  ): RezoDBTask[Account] = {
     sql"""
-      INSERT INTO accounts (userId, cryptoType, accountName)
-      VALUES ($userId, $cryptoType, $accountName)
-      RETURNING accountId
-    """.query[UUID].unique.transact(transactor)
-
+       SELECT *
+       FROM accounts
+       WHERE userId = $userId AND cryptoType = $cryptoType
+     """
+      .query[Account]
+      .unique
+      .transact(transactor)
+      .to[Task]
+      .mapError({
+        case UnexpectedEnd =>
+          MissingAccountByUserIdAndCryptoType(userId, cryptoType)
+        case e @ _ => UnexpectedError(e.getMessage)
+      })
+  }
 }

@@ -1,25 +1,26 @@
 package repository
 
-import cats.effect.*
-import doobie.util.transactor.Transactor.Aux
 import fixtures.UsersFixtures
 import models.Account
-import repository.Exceptions.{AccountAlreadyExists, AccountIsMissingByUserId}
-import repository.UsersRepositorySpec.suite
+import repository.Exceptions._
 import zio.ZIO
-import zio.test.{Spec, TestAspect, ZIOSpecDefault, assertTrue}
+import zio.test.*
+import zio.test.Assertion.*
 
 import java.util.UUID
 
 object AccountsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
-  val usersRepository: UsersRepository = new UsersRepository:
-    override val transactor: Aux[IO, Unit] = testTransactor
-  val accountsRepository: AccountsRepository = new AccountsRepository:
-    override val transactor: Aux[IO, Unit] = testTransactor
+  val usersRepository: UsersRepository = new UsersRepository(testTransactor)
+  val accountsRepository: AccountsRepository = new AccountsRepository(
+    testTransactor
+  )
 
+  val defaultCryptoType = "BTC"
+
+  // Shared setup for creating a user and account
   private def setupUserAndAccount = for {
     user <- ZIO.succeed(UsersFixtures.nextUser())
-    uuidEither <- usersRepository.safeCreateUser(
+    userId <- usersRepository.createUser(
       user.userTypeId,
       user.firstName,
       user.lastName,
@@ -27,82 +28,135 @@ object AccountsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       user.phoneNumber,
       user.passwordHash
     )
-    userId <- ZIO.fromEither(uuidEither)
-    createdAccount <- accountsRepository.safeCreateAccount(
+    accountId <- accountsRepository.createAccount(
       userId,
-      "BTC",
+      defaultCryptoType,
       "test account"
     )
-    accountId <- ZIO.fromEither(createdAccount)
   } yield (user, userId, accountId)
 
   def spec: Spec[Any, Throwable] = suite("AccountsRepositorySpec")(
-    test("properly create and load account ") {
-      for {
-        (_, userId, accountId) <- setupUserAndAccount
-        loadedAccountEither <- accountsRepository.getAccountByAccountId(
-          accountId
+    suite("createAccount")(
+      test("properly creates and loads an account") {
+        for {
+          (_, userId, accountId) <- setupUserAndAccount
+          loadedAccount <- accountsRepository.getAccountByAccountId(accountId)
+        } yield assertTrue(
+          loadedAccount == Account(
+            accountId = accountId,
+            userId = userId,
+            cryptoType = defaultCryptoType,
+            balance = 0,
+            accountName = "test account",
+            createdAt = loadedAccount.createdAt,
+            updatedAt = loadedAccount.updatedAt
+          )
         )
-        loadedAccount <- ZIO.fromEither(loadedAccountEither)
-      } yield assertTrue(
-        loadedAccount == Account(
-          addressId = accountId,
-          userId = userId,
-          cryptoType = "BTC",
-          balance = 0,
-          accountName = "test account",
-          createdAt = loadedAccount.createdAt,
-          updatedAt = loadedAccount.updatedAt
+      },
+      test(
+        "fails with ForeignKeyViolationUser when creating an account for a non-existent user"
+      ) {
+        val randomId = UUID.randomUUID()
+        assertZIO(
+          accountsRepository
+            .createAccount(randomId, defaultCryptoType, "test account")
+            .exit
+        )(fails(equalTo(ForeignKeyViolationUser(randomId))))
+      },
+      test(
+        "fails with UniqueViolationUserCryptoType when creating two accounts for a user with the same cryptoType"
+      ) {
+        for {
+          (_, userId, _) <- setupUserAndAccount
+          test <- assertZIO(
+            accountsRepository
+              .createAccount(userId, defaultCryptoType, "test account")
+              .exit
+          )(
+            fails(
+              equalTo(UniqueViolationUserCryptoType(userId, defaultCryptoType))
+            )
+          )
+        } yield test
+      }
+    ),
+    suite("getAccountByAccountId")(
+      test("properly loads an account by accountId") {
+        for {
+          (_, userId, accountId) <- setupUserAndAccount
+          loadedAccount <- accountsRepository.getAccountByAccountId(accountId)
+        } yield assertTrue(
+          loadedAccount == Account(
+            accountId = accountId,
+            userId = userId,
+            cryptoType = defaultCryptoType,
+            balance = 0,
+            accountName = "test account",
+            createdAt = loadedAccount.createdAt,
+            updatedAt = loadedAccount.updatedAt
+          )
         )
-      )
-    },
-    test("properly create and load multiple account for user") {
-      for {
-        (_, userId, accountId) <- setupUserAndAccount
-        createdAccount2 <- accountsRepository.safeCreateAccount(
-          userId,
-          "ETH",
-          "test account"
+      },
+      test(
+        "fails with MissingAccountByAccountId when loading a non-existent account"
+      ) {
+        val randomId = UUID.randomUUID()
+        assertZIO(
+          accountsRepository.getAccountByAccountId(randomId).exit
+        )(fails(equalTo(MissingAccountByAccountId(randomId))))
+      }
+    ),
+    suite("getAccountsByUserIdAndCryptoType")(
+      test("properly loads an account by userId and cryptoType") {
+        for {
+          (_, userId, accountId) <- setupUserAndAccount
+          loadedAccount <- accountsRepository
+            .getAccountsByUserIdAndCryptoType(userId, defaultCryptoType)
+        } yield assertTrue(
+          loadedAccount == Account(
+            accountId = accountId,
+            userId = userId,
+            cryptoType = defaultCryptoType,
+            balance = 0,
+            accountName = "test account",
+            createdAt = loadedAccount.createdAt,
+            updatedAt = loadedAccount.updatedAt
+          )
         )
-        accountId2 <- ZIO.fromEither(createdAccount2)
-        loadedAccountsEither <- accountsRepository.getAccountsByUserId(
-          userId
+      },
+      test(
+        "fails with MissingAccountByUserIdAndCryptoType when loading an account with a non-existent cryptoType"
+      ) {
+        for {
+          (_, userId, _) <- setupUserAndAccount
+          test <- assertZIO(
+            accountsRepository
+              .getAccountsByUserIdAndCryptoType(userId, "DNE Crypto")
+              .exit
+          )(
+            fails(
+              equalTo(MissingAccountByUserIdAndCryptoType(userId, "DNE Crypto"))
+            )
+          )
+        } yield test
+      }
+    ),
+    suite("getAccountsByUserId")(
+      test("properly loads multiple accounts for a user") {
+        for {
+          (_, userId, _) <- setupUserAndAccount
+          accountId2 <- accountsRepository.createAccount(
+            userId,
+            "ETH",
+            "test account"
+          )
+          loadedAccounts <- accountsRepository.getAccountsByUserId(userId)
+        } yield assertTrue(
+          loadedAccounts.size == 2 &&
+            loadedAccounts.exists(_.cryptoType == "ETH") &&
+            loadedAccounts.exists(_.cryptoType == "BTC")
         )
-        loadedAccounts <- ZIO.fromEither(loadedAccountsEither)
-      } yield assertTrue(
-        loadedAccounts.size == 2
-          && loadedAccounts.exists(_.cryptoType == "ETH")
-          && loadedAccounts.exists(_.cryptoType == "BTC")
-      )
-    },
-    test(
-      "fails with AccountIsMissingByUserUUID account does not exist"
-    ) {
-      val randomId = UUID.randomUUID()
-      for {
-        missingAccount <- accountsRepository.getAccountsByUserId(randomId)
-      } yield assertTrue({
-        missingAccount.left.getOrElse(
-          throw new Exception()
-        ) == AccountIsMissingByUserId(randomId)
-      })
-    },
-    test(
-      "fails with AccountAlreadyExists when trying to create two accounts for a user with same cryptoType"
-    ) {
-      for {
-        (_, userId, _) <- setupUserAndAccount
-        createdAccountFailure <- accountsRepository.safeCreateAccount(
-          userId,
-          "BTC",
-          "test account"
-        )
-      } yield assertTrue({
-        createdAccountFailure.left.getOrElse(
-          throw new Exception()
-        ) == AccountAlreadyExists(userId)
-      })
-    }
-  ) @@ TestAspect.beforeAll(initializeDb)
-    @@ TestAspect.afterAll(closeDb)
+      }
+    )
+  ) @@ TestAspect.beforeAll(initializeDb) @@ TestAspect.afterAll(closeDb)
 }

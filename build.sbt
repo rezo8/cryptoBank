@@ -17,7 +17,6 @@ lazy val root = project
       "org.tpolecat" %% "doobie-core" % "1.0.0-RC6",
       "org.tpolecat" %% "doobie-postgres" % "1.0.0-RC6",
       "org.tpolecat" %% "doobie-hikari" % "1.0.0-RC6",
-
       "org.mindrot" % "jbcrypt" % "0.4",
 
       // Scalactic imports
@@ -33,28 +32,28 @@ lazy val root = project
       "com.typesafe" % "config" % "1.4.3",
       "com.github.pureconfig" %% "pureconfig-core" % "0.17.8",
       // Flyway
-      "org.flywaydb" % "flyway-core" % "11.2.0",
-      "org.flywaydb" % "flyway-database-postgresql" % "11.2.0" % "runtime",
+      "org.flywaydb" % "flyway-core" % "11.3.0",
+      "org.flywaydb" % "flyway-database-postgresql" % "11.3.0" % "runtime",
 
       // Zio
       "dev.zio" %% "zio" % zioVersion,
       "dev.zio" %% "zio-http" % "3.0.1",
       "dev.zio" %% "zio-interop-cats" % "23.1.0.3",
-      "dev.zio" %% "zio-json" % "0.7.4",
+      "dev.zio" %% "zio-json" % "0.7.10",
       "dev.zio" %% "zio-test" % zioVersion % Test,
       "dev.zio" %% "zio-test-sbt" % zioVersion % Test,
       "dev.zio" %% "zio-test-magnolia" % zioVersion % Test,
       "dev.zio" %% "zio-test-junit" % zioVersion % Test,
+      "dev.zio" %% "zio-mock" % "1.0.0-RC12" % Test,
 
       // cats
       "org.typelevel" %% "cats-effect-testing-scalatest" % "1.6.0"
-    ),
-    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
+    )
   )
-
+testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 enablePlugins(FlywayPlugin)
 
-assemblyMergeStrategy in assembly := {
+ThisBuild / assemblyMergeStrategy := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard
   case "application.conf"            => MergeStrategy.concat
   case "reference.conf"              => MergeStrategy.concat

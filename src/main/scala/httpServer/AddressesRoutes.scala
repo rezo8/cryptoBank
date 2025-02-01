@@ -1,25 +1,23 @@
 package httpServer
 
-import httpServer.Helpers.handleRepositoryProcess
 import httpServer.Requests.{CreateAddressRequest, UpdateAddressAmountRequest}
 import httpServer.Responses.*
 import models.BitcoinAddressValue
-import repository.AddressRepository
+import services.AddressesService
 import zio.*
 import zio.http.*
-import zio.json.*
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext
 
 abstract class AddressesRoutes extends RouteContainer {
-  val addressRepository: AddressRepository
+  val addressesService: AddressesService
   implicit val ec: ExecutionContext
   private val rootUrl = "addresses"
 
   override val routes: Routes[Any, Response] = Routes(
     Method.POST / rootUrl -> handler { handleCreateAddress(_) },
-    Method.PUT / rootUrl / "addressId" / zio.http.uuid("addressId")
+    Method.PUT / rootUrl / "accountId" / zio.http.uuid("accountId")
       -> handler { (addressId: UUID, req: Request) =>
         handleUpdateAddressValue(addressId, req)
       },
@@ -29,49 +27,51 @@ abstract class AddressesRoutes extends RouteContainer {
   )
 
   private def handleCreateAddress(req: Request): ZIO[Any, Nothing, Response] = {
-    // TODO fix repo collisions
-    handleRepositoryProcess[CreateAddressResponse](
-      for {
-        requestString <- req.body.asString
-        createAddressRequest <- ZIO.fromEither(
-          requestString.fromJson[CreateAddressRequest]
-        )
-        addressId <- addressRepository.createBitcoinAddress(
-          createAddressRequest.accountId,
-          createAddressRequest.addressLocation,
-          BitcoinAddressValue(
-            createAddressRequest.balance
-          ) // TODO handle invalid
-        )
-      } yield Right(
-        CreateAddressResponse(addressId)
-      )
+    handleServerResponseWithRequest[
+      CreateAddressRequest,
+      CreateAddressResponse
+    ](
+      req,
+      (createAddressRequest: CreateAddressRequest) => {
+        addressesService
+          .createBitcoinAddress(
+            createAddressRequest.accountId,
+            createAddressRequest.addressLocation,
+            BitcoinAddressValue(
+              createAddressRequest.balance
+            )
+          )
+          .map(CreateAddressResponse(_))
+      }
     )
   }
 
   private def handleLoadAddressesByAccountId(
       id: UUID
   ): ZIO[Any, Nothing, Response] = {
-    handleRepositoryProcess[LoadAddressesForAccountResponse](for {
-      loadRes <- addressRepository.getAddressesByAccountId(id)
-      addresses <- ZIO.fromEither(loadRes)
-    } yield Right(LoadAddressesForAccountResponse(addresses)))
+    handleServerResponse[LoadAddressesForAccountResponse](for {
+      addresses <- addressesService.getAddressesByAccountId(id)
+    } yield LoadAddressesForAccountResponse(addresses))
   }
 
   private def handleUpdateAddressValue(
       addressId: UUID,
       req: Request
   ): ZIO[Any, Nothing, Response] = {
-    handleRepositoryProcess[MessageResponse](for {
-      requestString <- req.body.asString
-      updateAddressAmount <- ZIO.fromEither(
-        requestString.fromJson[UpdateAddressAmountRequest]
-      )
-      updateRes <- addressRepository.updateBitcoinAddressValue(
-        addressId,
-        BitcoinAddressValue(updateAddressAmount.satoshis)
-      )
-    } yield Right(MessageResponse("successful update")))
+    handleServerResponseWithRequest[
+      UpdateAddressAmountRequest,
+      MessageResponse
+    ](
+      req,
+      (updateAddressAmountRequest: UpdateAddressAmountRequest) => {
+        addressesService
+          .updateBitcoinAddressValue(
+            addressId,
+            BitcoinAddressValue(updateAddressAmountRequest.satoshis)
+          )
+          .map(_ => MessageResponse("successful update"))
+      }
+    )
   }
 
 }

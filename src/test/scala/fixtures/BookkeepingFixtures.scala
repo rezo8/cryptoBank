@@ -1,6 +1,6 @@
 package fixtures
 
-import models.{Transaction, TransactionValue, Account}
+import models.{Account, Transaction, TransactionValue}
 
 import java.time.Instant
 import java.util.UUID
@@ -51,7 +51,7 @@ object BookkeepingFixtures {
       updatedAt: Instant = Instant.now()
   ): Account = {
     Account(
-      addressId = id,
+      accountId = id,
       userId = userId,
       cryptoType = cryptoType,
       balance = balance,

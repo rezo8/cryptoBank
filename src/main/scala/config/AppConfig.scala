@@ -1,7 +1,7 @@
 package config
 
-import pureconfig.generic.derivation.*
 import pureconfig.*
+import pureconfig.generic.derivation.*
 
 sealed trait DerivedConfig derives ConfigReader
 case class AppConfig(

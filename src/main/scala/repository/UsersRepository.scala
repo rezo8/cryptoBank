@@ -6,92 +6,91 @@ import doobie.*
 import doobie.implicits.*
 import doobie.postgres.*
 import doobie.postgres.implicits.*
+import doobie.util.invariant.UnexpectedEnd
 import doobie.util.transactor.Transactor.Aux
 import models.User
 import repository.Exceptions.*
+import utils.ZioTypes.RezoDBTask
 import zio.*
 import zio.interop.catz.*
 
 import java.util.UUID
 
-// TODO add service layer to move from DBException to a Server Exception
-//  rather than capturing here
-abstract class UsersRepository {
-  val transactor: Aux[IO, Unit]
+trait UsersRepositoryTrait {
+  def getUser(userId: UUID): RezoDBTask[User]
 
-  def safeCreateUser(
+  def getUserByEmail(email: String): RezoDBTask[User]
+
+  def createUser(
       userTypeId: Int,
       firstName: String,
       lastName: String,
       email: String,
       phoneNumber: String,
       passwordHash: String
-  ): Task[Either[ServerException, UUID]] = {
-    createUser(
-      userTypeId,
-      firstName,
-      lastName,
-      email,
-      phoneNumber,
-      passwordHash
-    )
-      .attemptSomeSqlState { case sqlstate.class23.UNIQUE_VIOLATION =>
-        UserAlreadyExists()
-      }
-      .to[Task]
-  }
+  ): RezoDBTask[UUID]
+}
+
+class UsersRepository(transactor: Aux[IO, Unit]) extends UsersRepositoryTrait {
 
   // Load user by userId
-  def getUser(userId: UUID): Task[Either[ServerException, User]] =
+  def getUser(userId: UUID): RezoDBTask[User] =
     sql"""
       SELECT userId, userTypeId, firstName, lastName, email, phoneNumber, passwordHash, createdAt, updatedAt
       FROM users
       WHERE userId = $userId
     """
       .query[User]
-      .option
+      .unique
       .transact(transactor)
-      .map(
-        _.fold({
-          Left(UserIsMissingByUUID(userId))
-        })(user => {
-          Right(user)
-        })
-      )
       .to[Task]
+      .mapError({
+        case UnexpectedEnd => MissingUserById(userId)
+        case e @ _         => UnexpectedError(e.getMessage)
+      })
 
   // Load user by Email
-  def getUserByEmail(email: String): Task[Either[ServerException, User]] =
+  def getUserByEmail(email: String): RezoDBTask[User] =
     sql"""
       SELECT userId, userTypeId, firstName, lastName, email, phoneNumber, passwordHash, createdAt, updatedAt
       FROM users
       WHERE email = $email
     """
       .query[User]
-      .option
+      .unique
       .transact(transactor)
-      .map(
-        _.fold({
-          Left(UserIsMissingByEmail(email))
-        })(user => {
-          Right(user)
-        })
-      )
       .to[Task]
+      .mapError({
+        case UnexpectedEnd => MissingUserByEmail(email)
+        case e @ _         => UnexpectedError(e.getMessage)
+      })
 
   // Insert user
-  private def createUser(
+  def createUser(
       userTypeId: Int,
       firstName: String,
       lastName: String,
       email: String,
       phoneNumber: String,
       passwordHash: String
-  ): IO[UUID] =
+  ): RezoDBTask[UUID] =
     sql"""
       INSERT INTO users (userTypeId, firstName, lastName, email, phoneNumber, passwordHash)
       VALUES ($userTypeId, $firstName, $lastName, $email, $phoneNumber, $passwordHash)
       RETURNING userId
-    """.query[UUID].unique.transact(transactor)
+    """
+      .query[UUID]
+      .unique
+      .transact(transactor)
+      .attemptSomeSqlState { case sqlstate.class23.UNIQUE_VIOLATION =>
+        UniqueViolationUser(email, phoneNumber)
+      }
+      .to[Task]
+      .absolve
+      .mapError({
+        case r if r.isInstanceOf[RepositoryException] => // Don't like this hack. TODO figure out
+          r.asInstanceOf[RepositoryException]
+        case e @ _ => UnexpectedError(e.getMessage)
+      })
 
 }

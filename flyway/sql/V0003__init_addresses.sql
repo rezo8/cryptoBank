@@ -5,7 +5,8 @@ CREATE TABLE addresses (
     balance BIGINT DEFAULT 0,
     isActive BOOLEAN DEFAULT TRUE,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_accountId_address UNIQUE (accountId, address)
 );
 
 CREATE INDEX idxAddressesWalletId ON addresses(accountId);

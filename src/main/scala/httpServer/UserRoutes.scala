@@ -1,21 +1,19 @@
 package httpServer
 
-import httpServer.Helpers.handleRepositoryProcess
 import httpServer.Requests.CreateUserRequest
 import httpServer.Responses.LoadUserResponse
-import models.{User, UserType}
+import models.UserType
 import org.mindrot.jbcrypt.BCrypt
-import repository.UsersRepository
+import services.UsersService
 import zio.*
 import zio.http.*
-import zio.json.*
 
 import java.util
 import java.util.UUID
 import scala.concurrent.ExecutionContext
 
 abstract class UserRoutes extends RouteContainer {
-  val usersRepository: UsersRepository
+  val usersService: UsersService
   implicit val ec: ExecutionContext
   private val rootUrl = "users"
 
@@ -30,42 +28,43 @@ abstract class UserRoutes extends RouteContainer {
   )
 
   private def handleLoadByEmail(email: String): ZIO[Any, Nothing, Response] = {
-    handleRepositoryProcess[LoadUserResponse](for {
-      loadRes <- usersRepository
-        .getUserByEmail(email)
-    } yield loadRes.map(LoadUserResponse.fromUser))
+    handleServerResponse[LoadUserResponse](for {
+      loadRes <- usersService.getUserByEmail(email)
+    } yield LoadUserResponse.fromUser(loadRes))
   }
 
   private def handleLoadById(id: UUID): ZIO[Any, Nothing, Response] = {
-    handleRepositoryProcess[LoadUserResponse](for {
-      loadRes <- usersRepository
-        .getUser(id)
-    } yield loadRes.map(LoadUserResponse.fromUser))
+    handleServerResponse[LoadUserResponse](for {
+      loadRes <- usersService.getUserById(id)
+    } yield LoadUserResponse.fromUser(loadRes))
   }
 
   private def handleCreateUser(
       req: Request
   ): ZIO[Any, Nothing, Response] = {
-    handleRepositoryProcess[LoadUserResponse](for {
-      userBodyString <- req.body.asString
-      userRequest <- ZIO.fromEither(userBodyString.fromJson[CreateUserRequest])
-      createRes <- usersRepository
-        .safeCreateUser(
-          userTypeId = UserType.intFromString(userRequest.userType),
-          firstName = userRequest.firstName,
-          lastName = userRequest.lastName,
-          email = userRequest.email,
-          phoneNumber = userRequest.phoneNumber,
-          passwordHash = BCrypt.hashpw(userRequest.password, BCrypt.gensalt())
-        )
-    } yield createRes.map(userId => {
-      LoadUserResponse(
-        Some(userId),
-        userRequest.firstName,
-        userRequest.lastName,
-        userRequest.email,
-        userRequest.phoneNumber
-      )
-    }))
+    handleServerResponseWithRequest[CreateUserRequest, LoadUserResponse](
+      req,
+      (createUserRequest: CreateUserRequest) => {
+        usersService
+          .createUser(
+            userTypeId = UserType.intFromString(createUserRequest.userType),
+            firstName = createUserRequest.firstName,
+            lastName = createUserRequest.lastName,
+            email = createUserRequest.email,
+            phoneNumber = createUserRequest.phoneNumber,
+            passwordHash =
+              BCrypt.hashpw(createUserRequest.password, BCrypt.gensalt())
+          )
+          .map(userId =>
+            LoadUserResponse(
+              Some(userId),
+              createUserRequest.firstName,
+              createUserRequest.lastName,
+              createUserRequest.email,
+              createUserRequest.phoneNumber
+            )
+          )
+      }
+    )
   }
 }
