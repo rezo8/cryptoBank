@@ -6,8 +6,6 @@ val zioVersion = "2.1.14"
 
 ThisBuild / scalaVersion := scala3Version
 
-resolvers += "Maven Central" at "https://repo1.maven.org/maven2/"
-
 lazy val root = project
   .in(file("."))
   .settings(
