@@ -1,20 +1,7 @@
 package services
 
-import repository.Exceptions.{
-  ExcessiveUpdate,
-  ForeignKeyViolation,
-  MissingEntry,
-  RepositoryException,
-  UnexpectedSqlError,
-  UniqueViolation
-}
-import services.Exceptions.{
-  DatabaseConflict,
-  MissingDatabaseObject,
-  ServerException,
-  Unexpected,
-  UnexpectedUpdate
-}
+import repository.Exceptions.*
+import services.Exceptions.*
 
 trait RepositoryService {
   def handleRepositoryExceptions(

@@ -2,8 +2,6 @@ package services
 
 import zio.http.Status
 
-import java.util.UUID
-
 object Exceptions {
 
   trait ServerException extends Exception {

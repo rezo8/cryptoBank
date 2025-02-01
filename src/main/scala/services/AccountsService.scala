@@ -1,7 +1,7 @@
 package services
 
 import models.Account
-import repository.{AccountsRepository, AccountsRepositoryTrait}
+import repository.AccountsRepositoryTrait
 import repository.Exceptions.RepositoryException
 import utils.ZioTypes.RezoTask
 import zio.*

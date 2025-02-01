@@ -1,7 +1,7 @@
 package repository.mocks
 
-import models.{Account, Address}
-import repository.{AccountsRepositoryTrait, AddressesRepositoryTrait}
+import models.Account
+import repository.AccountsRepositoryTrait
 import repository.Exceptions.RepositoryException
 import utils.ZioTypes.RezoDBTask
 import zio.mock.*
