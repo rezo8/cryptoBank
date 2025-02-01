@@ -17,9 +17,10 @@ import zio.interop.catz.*
 import java.time.Instant
 import java.util.UUID
 
-class AddressesRepository(transactor: Aux[IO, Unit]) {
+class AddressesRepository(transactor: Aux[IO, Unit])
+    extends AddressesRepositoryTrait {
 
-  def createAddressSql(
+  def createAddress(
       accountId: UUID,
       address: String,
       balance: Long
@@ -110,5 +111,25 @@ class AddressesRepository(transactor: Aux[IO, Unit]) {
         case e @ _ => UnexpectedError(e.getMessage)
       })
   }
+}
 
+trait AddressesRepositoryTrait {
+  def createAddress(
+      accountId: UUID,
+      address: String,
+      balance: Long
+  ): RezoDBTask[UUID]
+
+  def getAddressByAddressId(
+      addressId: UUID
+  ): RezoDBTask[Address]
+
+  def getAddressesByAccountId(
+      accountId: UUID
+  ): RezoDBTask[List[Address]]
+
+  def updateAddressValue(
+      addressId: UUID,
+      addressValue: Long
+  ): RezoDBTask[RuntimeFlags]
 }

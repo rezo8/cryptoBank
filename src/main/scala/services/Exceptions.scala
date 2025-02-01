@@ -15,6 +15,12 @@ object Exceptions {
     override def status: Status.Error = Status.Conflict
   }
 
+  case class UnexpectedUpdate(message: String) extends ServerException {
+    override def getMessage: String =
+      s"Unexpected Updates: ${message}"
+    override def status: Status.Error = Status.InternalServerError
+  }
+
   case class MissingDatabaseObject(message: String) extends ServerException {
     override def getMessage: String = message
     override def status: Status.Error = Status.NotFound
@@ -23,6 +29,7 @@ object Exceptions {
   case class Unexpected(exception: Throwable) extends ServerException {
     override def getMessage: String =
       s"Unexpected Exception: ${exception.getMessage}"
+    override def status: Status.Error = Status.InternalServerError
   }
 
   case class UnparseableRequest(badField: String) extends ServerException {

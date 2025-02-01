@@ -14,7 +14,7 @@ object Exceptions {
   case class ExcessiveUpdateAddresses(updateCount: Int)
       extends ExcessiveUpdate {
     override def getMessage: String =
-      s"Unexpectedly update $updateCount addresses. Please verify query."
+      s"Unexpectedly updated $updateCount addresses. Please verify query."
   }
   case class ForeignKeyViolationUser(userId: UUID) extends ForeignKeyViolation {
     override def getMessage: String =

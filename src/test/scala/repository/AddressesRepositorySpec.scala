@@ -1,9 +1,7 @@
 package repository
 
-import cats.effect.*
-import doobie.util.transactor.Transactor.Aux
 import fixtures.UsersFixtures
-import models.{Address, BitcoinAddressValue}
+import models.Address
 import repository.AddressesRepositorySpec.test
 import repository.Exceptions.{
   MissingAccountByAccountId,
@@ -17,6 +15,7 @@ import zio.test.Assertion.*
 import java.util.UUID
 import scala.util.Random
 
+// TODO better organize these tests.
 object AddressesRepositorySpec extends ZIOSpecDefault with RepositorySpec {
   val accountsRepository: AccountsRepository = new AccountsRepository(
     testTransactor
@@ -42,18 +41,18 @@ object AddressesRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       "BTC",
       "test account"
     )
-    addressId <- addressRepository.createAddressSql(
+    addressId <- addressRepository.createAddress(
       accountId,
       addressLocation,
       addressValue
     )
   } yield (user, userId, accountId, addressId)
 
-  private val addressLocation = "Test address loc"
+  private val addressLocation = "Test addressName loc"
   private val addressValue = Random.between(0L, 10_000_000L)
 
   def spec: Spec[Any, Throwable] = suite("AddressesRepositorySpec")(
-    test("properly create and load address ") {
+    test("properly create and load addressName ") {
       for {
         (_, _, accountId, addressId) <- setupUserAccountAndAddress
         loadedAddress <- addressRepository.getAddressByAddressId(addressId)
@@ -69,7 +68,7 @@ object AddressesRepositorySpec extends ZIOSpecDefault with RepositorySpec {
         ) == loadedAddress
       })
     },
-    test("can update address owned amount") {
+    test("can update addressName owned amount") {
       val newValue = addressValue - 1L
       for {
         (_, _, accountId, addressId) <- setupUserAccountAndAddress
@@ -90,10 +89,10 @@ object AddressesRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       })
     },
     test("can create and load multiple addresses for a user") {
-      val secondAddressLoc = "Test address loc 2"
+      val secondAddressLoc = "Test addressName loc 2"
       for {
         (_, _, accountId, addressId) <- setupUserAccountAndAddress
-        addressId <- addressRepository.createAddressSql(
+        addressId <- addressRepository.createAddress(
           accountId,
           secondAddressLoc,
           addressValue
@@ -111,7 +110,7 @@ object AddressesRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       val randomId = UUID.randomUUID()
       assertZIO(
         addressRepository
-          .createAddressSql(
+          .createAddress(
             randomId,
             addressLocation,
             addressValue
@@ -120,13 +119,13 @@ object AddressesRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       )(fails(equalTo(MissingAccountByAccountId(randomId))))
     },
     test(
-      "fails with UniqueViolationAccountIdAddress when account already has address"
+      "fails with UniqueViolationAccountIdAddress when account already has addressName"
     ) {
       for {
         (_, _, accountId, addressId) <- setupUserAccountAndAddress
         test <- assertZIO(
           addressRepository
-            .createAddressSql(
+            .createAddress(
               accountId,
               addressLocation,
               addressValue
@@ -139,7 +138,9 @@ object AddressesRepositorySpec extends ZIOSpecDefault with RepositorySpec {
         )
       } yield test
     },
-    test("fails with MissingAddressByAddressId when address does not exist") {
+    test(
+      "fails with MissingAddressByAddressId when addressName does not exist"
+    ) {
       val randomId = UUID.randomUUID()
       assertZIO(
         addressRepository
@@ -148,7 +149,7 @@ object AddressesRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       )(fails(equalTo(MissingAddressByAddressId(randomId))))
     },
     test(
-      "fails with MissingAddressByAddressId when address does not exist on update"
+      "fails with MissingAddressByAddressId when addressName does not exist on update"
     ) {
       val randomId = UUID.randomUUID()
       assertZIO(
