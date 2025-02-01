@@ -5,10 +5,11 @@ import zio.json.{DeriveJsonDecoder, JsonDecoder}
 import java.util.UUID
 
 object Requests {
+  trait ServerRequest
 
   final case class LoadUserByEmailRequest(
       email: String
-  )
+  ) extends ServerRequest
   object LoadUserByEmailRequest {
     implicit val decoder: JsonDecoder[LoadUserByEmailRequest] =
       DeriveJsonDecoder.gen[LoadUserByEmailRequest]
@@ -22,7 +23,7 @@ object Requests {
       email: String,
       phoneNumber: String,
       password: String
-  )
+  ) extends ServerRequest
 
   object CreateUserRequest {
     implicit val decoder: JsonDecoder[CreateUserRequest] =
@@ -33,7 +34,7 @@ object Requests {
       userId: UUID,
       cryptoType: String, // TODO make this an enum
       accountName: String
-  )
+  ) extends ServerRequest
 
   object CreateAccountRequest {
     implicit val decoder: JsonDecoder[CreateAccountRequest] =
@@ -44,7 +45,7 @@ object Requests {
       accountId: UUID,
       addressLocation: String,
       balance: Long
-  )
+  ) extends ServerRequest
 
   object CreateAddressRequest {
     implicit val decoder: JsonDecoder[CreateAddressRequest] =
@@ -52,6 +53,7 @@ object Requests {
   }
 
   final case class UpdateAddressAmountRequest(satoshis: Long)
+      extends ServerRequest
 
   object UpdateAddressAmountRequest {
     implicit val decoder: JsonDecoder[UpdateAddressAmountRequest] =

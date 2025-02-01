@@ -1,14 +1,11 @@
 package httpServer
 
-import httpServer.Helpers.handleServerResponse
 import httpServer.Requests.{CreateAddressRequest, UpdateAddressAmountRequest}
 import httpServer.Responses.*
 import models.BitcoinAddressValue
 import services.AddressesService
-import services.Exceptions.{Unexpected, UnparseableRequest}
 import zio.*
 import zio.http.*
-import zio.json.*
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext
@@ -30,24 +27,22 @@ abstract class AddressesRoutes extends RouteContainer {
   )
 
   private def handleCreateAddress(req: Request): ZIO[Any, Nothing, Response] = {
-    // TODO fix repo collisions
-    handleServerResponse[CreateAddressResponse](
-      for {
-        requestString <- req.body.asString.mapError(Unexpected(_))
-        createAddressRequest <- ZIO.fromEither(
-          requestString
-            .fromJson[CreateAddressRequest]
-            .left
-            .map(x => UnparseableRequest(x))
-        )
-        addressId <- addressesService.createBitcoinAddress(
-          createAddressRequest.accountId,
-          createAddressRequest.addressLocation,
-          BitcoinAddressValue(
-            createAddressRequest.balance
+    handleServerResponseWithRequest[
+      CreateAddressRequest,
+      CreateAddressResponse
+    ](
+      req,
+      (createAddressRequest: CreateAddressRequest) => {
+        addressesService
+          .createBitcoinAddress(
+            createAddressRequest.accountId,
+            createAddressRequest.addressLocation,
+            BitcoinAddressValue(
+              createAddressRequest.balance
+            )
           )
-        )
-      } yield CreateAddressResponse(addressId)
+          .map(CreateAddressResponse(_))
+      }
     )
   }
 
@@ -63,19 +58,20 @@ abstract class AddressesRoutes extends RouteContainer {
       addressId: UUID,
       req: Request
   ): ZIO[Any, Nothing, Response] = {
-    handleServerResponse[MessageResponse](for {
-      requestString <- req.body.asString.mapError(Unexpected(_))
-      updateAddressAmount <- ZIO.fromEither(
-        requestString
-          .fromJson[UpdateAddressAmountRequest]
-          .left
-          .map(x => UnparseableRequest(x))
-      )
-      updateRes <- addressesService.updateBitcoinAddressValue(
-        addressId,
-        BitcoinAddressValue(updateAddressAmount.satoshis)
-      )
-    } yield MessageResponse("successful update"))
+    handleServerResponseWithRequest[
+      UpdateAddressAmountRequest,
+      MessageResponse
+    ](
+      req,
+      (updateAddressAmountRequest: UpdateAddressAmountRequest) => {
+        addressesService
+          .updateBitcoinAddressValue(
+            addressId,
+            BitcoinAddressValue(updateAddressAmountRequest.satoshis)
+          )
+          .map(_ => MessageResponse("successful update"))
+      }
+    )
   }
 
 }

@@ -1,13 +1,10 @@
 package httpServer
 
-import httpServer.Helpers.handleServerResponse
 import httpServer.Requests.CreateAccountRequest
 import httpServer.Responses.{CreateAccountResponse, LoadAccountResponse}
 import services.AccountsService
-import services.Exceptions.{Unexpected, UnparseableRequest}
 import zio.*
 import zio.http.*
-import zio.json.*
 
 import java.util
 import java.util.UUID
@@ -34,19 +31,20 @@ abstract class AccountsRoutes extends RouteContainer {
   private def handleCreateAccount(
       req: Request
   ): ZIO[Any, Nothing, Response] = {
-    handleServerResponse[CreateAccountResponse](for {
-      userBodyString <- req.body.asString.mapError(Unexpected(_))
-      createAccountRequest <- ZIO.fromEither(
-        userBodyString
-          .fromJson[CreateAccountRequest]
-          .left
-          .map(UnparseableRequest(_))
-      )
-      accountId <- accountsService.createAccount(
-        createAccountRequest.userId,
-        createAccountRequest.cryptoType,
-        createAccountRequest.accountName
-      )
-    } yield CreateAccountResponse(accountId))
+    handleServerResponseWithRequest[
+      CreateAccountRequest,
+      CreateAccountResponse
+    ](
+      req,
+      (createAccountRequest: CreateAccountRequest) => {
+        accountsService
+          .createAccount(
+            createAccountRequest.userId,
+            createAccountRequest.cryptoType,
+            createAccountRequest.accountName
+          )
+          .map(CreateAccountResponse(_))
+      }
+    )
   }
 }

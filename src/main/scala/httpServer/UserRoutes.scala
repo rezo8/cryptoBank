@@ -1,17 +1,12 @@
 package httpServer
 
-import httpServer.Helpers.handleServerResponse
 import httpServer.Requests.CreateUserRequest
 import httpServer.Responses.LoadUserResponse
-import models.{User, UserType}
+import models.UserType
 import org.mindrot.jbcrypt.BCrypt
-import repository.UsersRepository
-import services.Exceptions.{ServerException, Unexpected, UnparseableRequest}
 import services.UsersService
-import utils.ZioTypes.RezoTask
 import zio.*
 import zio.http.*
-import zio.json.*
 
 import java.util
 import java.util.UUID
@@ -47,30 +42,29 @@ abstract class UserRoutes extends RouteContainer {
   private def handleCreateUser(
       req: Request
   ): ZIO[Any, Nothing, Response] = {
-    handleServerResponse[LoadUserResponse]({
-      for {
-        userBodyString <- req.body.asString.mapError(Unexpected(_))
-        userRequest <- ZIO.fromEither(
-          userBodyString
-            .fromJson[CreateUserRequest]
-            .left
-            .map(x => UnparseableRequest(x))
-        )
-        userId <- usersService.createUser(
-          userTypeId = UserType.intFromString(userRequest.userType),
-          firstName = userRequest.firstName,
-          lastName = userRequest.lastName,
-          email = userRequest.email,
-          phoneNumber = userRequest.phoneNumber,
-          passwordHash = BCrypt.hashpw(userRequest.password, BCrypt.gensalt())
-        )
-      } yield LoadUserResponse(
-        Some(userId),
-        userRequest.firstName,
-        userRequest.lastName,
-        userRequest.email,
-        userRequest.phoneNumber
-      )
-    })
+    handleServerResponseWithRequest[CreateUserRequest, LoadUserResponse](
+      req,
+      (createUserRequest: CreateUserRequest) => {
+        usersService
+          .createUser(
+            userTypeId = UserType.intFromString(createUserRequest.userType),
+            firstName = createUserRequest.firstName,
+            lastName = createUserRequest.lastName,
+            email = createUserRequest.email,
+            phoneNumber = createUserRequest.phoneNumber,
+            passwordHash =
+              BCrypt.hashpw(createUserRequest.password, BCrypt.gensalt())
+          )
+          .map(userId =>
+            LoadUserResponse(
+              Some(userId),
+              createUserRequest.firstName,
+              createUserRequest.lastName,
+              createUserRequest.email,
+              createUserRequest.phoneNumber
+            )
+          )
+      }
+    )
   }
 }
