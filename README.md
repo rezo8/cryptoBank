@@ -49,3 +49,21 @@ If running into issues, reset by running:
    `sbt run`
 
 Enjoy!
+
+### Bank Design
+
+#### Transaction Flow 
+
+##### Asynchronous flow. Done for values >= 100 Satoshis
+1. Transaction gets created. Set to status pending
+2. Transaction Event gets published. 
+3. Transaction Event Consumed. The Transaction Addresses are updated accordingly.
+4. On success, sets to confirmed. 
+5. On failure, set to failure.
+6. Notify customer through text about the success/failure (not set up)
+
+##### Synchronous flow. Done for values less than 100 Satoshis
+1. Transaction gets created. Set to status pending
+2. The Transaction Addresses are updated accordingly.
+3. On success, sets to confirmed.
+4. On failure, set to failure. Error response returned.
