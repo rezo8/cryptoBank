@@ -37,23 +37,19 @@ case class Transaction(
 
   def nonChangeOutputs(): TransactionValue =
     outputs.foldLeft[TransactionValue](fixedZero)((acc, curr) => {
-      if (Some(curr._1) != this.changeAddressOpt) {
+      if (!this.changeAddressOpt.contains(curr._1)) {
         TransactionValue(curr._2.bitCoinChunk.+(acc.bitCoinChunk))
       } else {
         acc
       }
     })
 
-  def getChange(): Option[TransactionValue] = {
-    this.changeAddressOpt.fold[Option[TransactionValue]](None)(
-      changeAddress => {
-        this.outputs.get(changeAddress)
-      }
-    )
+  def getChange: Option[TransactionValue] = {
+    this.changeAddressOpt.flatMap(this.outputs.get)
   }
 
   def transactionFee(): TransactionValue = {
-    return TransactionValue(
+    TransactionValue(
       this
         .totalInputs()
         .bitCoinChunk
