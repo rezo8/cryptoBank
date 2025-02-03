@@ -3,7 +3,7 @@ package com.rezo
 import cats.effect
 import cats.effect.IO
 import com.rezo.Server.startServer
-import com.rezo.config.{AppConfig, ConfigLoadException, DerivedConfig}
+import com.rezo.config.*
 import com.rezo.httpServer.{
   AccountsRoutes,
   AddressesRoutes,
@@ -27,11 +27,14 @@ import scala.concurrent.ExecutionContext
 object Server extends ZIOAppDefault with BaseServer {
   main =>
 
-  val config: AppConfig = ConfigSource.default
-    .at("app")
+  val config: ServerConfig = ConfigSource.default
+    .at("server")
     .load[DerivedConfig]
     .getOrElse(throw new ConfigLoadException())
-    .asInstanceOf[AppConfig]
+    .asInstanceOf[ServerConfig]
+
+  override val serverMetadataConfig: ServerMetadataConfig =
+    config.serverMetadataConfig
 
   private val transactor =
     Transactor.fromDriverManager[IO](
