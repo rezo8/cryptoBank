@@ -41,6 +41,7 @@ lazy val root = project
       "dev.zio" %% "zio-http" % "3.0.1",
       "dev.zio" %% "zio-interop-cats" % "23.1.0.3",
       "dev.zio" %% "zio-json" % "0.7.21",
+      "dev.zio" %% "zio-kafka" % "2.10.0",
       "dev.zio" %% "zio-test" % zioVersion % Test,
       "dev.zio" %% "zio-test-sbt" % zioVersion % Test,
       "dev.zio" %% "zio-test-magnolia" % zioVersion % Test,
