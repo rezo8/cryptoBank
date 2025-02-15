@@ -2,7 +2,8 @@ import sbtassembly.MergeStrategy
 import sbtassembly.PathList
 
 val scala3Version = "3.6.2"
-val zioVersion = "2.1.14"
+val doobieVersion = "1.0.0-RC7"
+val zioVersion = "2.1.15"
 
 ThisBuild / scalaVersion := scala3Version
 
@@ -14,9 +15,9 @@ lazy val root = project
     scalaVersion := scala3Version,
     libraryDependencies ++= Seq(
       // Doobie Imports
-      "org.tpolecat" %% "doobie-core" % "1.0.0-RC6",
-      "org.tpolecat" %% "doobie-postgres" % "1.0.0-RC6",
-      "org.tpolecat" %% "doobie-hikari" % "1.0.0-RC6",
+      "org.tpolecat" %% "doobie-core" % doobieVersion,
+      "org.tpolecat" %% "doobie-postgres" % doobieVersion,
+      "org.tpolecat" %% "doobie-hikari" % doobieVersion,
       "org.mindrot" % "jbcrypt" % "0.4",
 
       // Scalactic imports
@@ -32,14 +33,14 @@ lazy val root = project
       "com.typesafe" % "config" % "1.4.3",
       "com.github.pureconfig" %% "pureconfig-core" % "0.17.8",
       // Flyway
-      "org.flywaydb" % "flyway-core" % "11.3.0",
-      "org.flywaydb" % "flyway-database-postgresql" % "11.3.0" % "runtime",
+      "org.flywaydb" % "flyway-core" % "11.3.2",
+      "org.flywaydb" % "flyway-database-postgresql" % "11.3.2" % "runtime",
 
       // Zio
       "dev.zio" %% "zio" % zioVersion,
       "dev.zio" %% "zio-http" % "3.0.1",
       "dev.zio" %% "zio-interop-cats" % "23.1.0.3",
-      "dev.zio" %% "zio-json" % "0.7.10",
+      "dev.zio" %% "zio-json" % "0.7.21",
       "dev.zio" %% "zio-test" % zioVersion % Test,
       "dev.zio" %% "zio-test-sbt" % zioVersion % Test,
       "dev.zio" %% "zio-test-magnolia" % zioVersion % Test,
