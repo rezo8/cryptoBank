@@ -1,7 +1,11 @@
 package repository
 
 import fixtures.UsersFixtures
-import com.rezo.repository.Exceptions.{MissingUserByEmail, MissingUserById, UniqueViolationUser}
+import com.rezo.repository.Exceptions.{
+  MissingUserByEmail,
+  MissingUserById,
+  UniqueViolationUser
+}
 import com.rezo.repository.UsersRepository
 import repository.UsersRepositorySpec.test
 import zio.ZIO
@@ -33,7 +37,7 @@ object UsersRepositorySpec extends ZIOSpecDefault with RepositorySpec {
           loadedUser <- usersRepository.getUser(userId)
         } yield assertTrue(
           user.copy(
-            userId = Some(userId),
+            userId = userId,
             createdAt = loadedUser.createdAt,
             updatedAt = loadedUser.updatedAt
           ) == loadedUser
@@ -55,7 +59,7 @@ object UsersRepositorySpec extends ZIOSpecDefault with RepositorySpec {
           loadedUser <- usersRepository.getUserByEmail(user.email)
         } yield assertTrue(
           user.copy(
-            userId = Some(userId),
+            userId = userId,
             createdAt = loadedUser.createdAt,
             updatedAt = loadedUser.updatedAt
           ) == loadedUser

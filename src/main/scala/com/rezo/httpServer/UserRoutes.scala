@@ -2,7 +2,9 @@ package com.rezo.httpServer
 
 import Requests.CreateUserRequest
 import Responses.LoadUserResponse
-import com.rezo.models.UserType
+import com.rezo.events.CreateUserEvent
+import com.rezo.kafka.producers.CreateUserEventProducer
+import com.rezo.models.{User, UserType}
 import com.rezo.services.UsersService
 import org.mindrot.jbcrypt.BCrypt
 import zio.*
@@ -14,6 +16,7 @@ import scala.concurrent.ExecutionContext
 
 abstract class UserRoutes extends RouteContainer {
   val usersService: UsersService
+  //  val createUserEventProducer: CreateUserEventProducer
   implicit val ec: ExecutionContext
   private val rootUrl = "users"
 
@@ -22,7 +25,7 @@ abstract class UserRoutes extends RouteContainer {
     Method.GET / "users" / "email" / string("email") -> handler {
       (email: String, _: Request) => handleLoadByEmail(email)
     },
-    Method.GET / "users" / "id" / zio.http.uuid("uuid") -> handler {
+    Method.GET / "users" / "id" / zio.http.uuid("eventId") -> handler {
       (id: UUID, _: Request) => handleLoadById(id)
     }
   )
@@ -55,9 +58,10 @@ abstract class UserRoutes extends RouteContainer {
             passwordHash =
               BCrypt.hashpw(createUserRequest.password, BCrypt.gensalt())
           )
+          // TODO have create user return user so we can do the create event.
           .map(userId =>
             LoadUserResponse(
-              Some(userId),
+              userId,
               createUserRequest.firstName,
               createUserRequest.lastName,
               createUserRequest.email,

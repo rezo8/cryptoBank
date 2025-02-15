@@ -18,7 +18,7 @@ object Responses {
   }
 
   final case class LoadUserResponse(
-      id: Option[UUID],
+      id: UUID,
       firstName: String,
       lastName: String,
       email: String,

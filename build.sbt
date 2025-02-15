@@ -4,6 +4,7 @@ import sbtassembly.PathList
 val scala3Version = "3.6.2"
 val doobieVersion = "1.0.0-RC7"
 val zioVersion = "2.1.15"
+val circeVersion = "0.14.10"
 
 ThisBuild / scalaVersion := scala3Version
 

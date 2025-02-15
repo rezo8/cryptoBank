@@ -7,7 +7,7 @@ import java.util.UUID
 
 // TODO add email validation to constructor
 final case class User(
-    userId: Option[UUID],
+    userId: UUID,
     userTypeId: Int,
     firstName: String,
     lastName: String,

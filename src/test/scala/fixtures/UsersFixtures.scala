@@ -16,7 +16,7 @@ object UsersFixtures {
   }
 
   def nextUser(
-      id: Option[UUID] = Some(UUID.randomUUID()),
+      id: UUID = UUID.randomUUID(),
       userTypeId: Int = nextUserType().userTypeId,
       firstName: String = new String(Random.alphanumeric.take(10).toArray),
       lastName: String = new String(Random.alphanumeric.take(10).toArray),

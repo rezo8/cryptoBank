@@ -2,7 +2,7 @@ package com.rezo
 
 import com.rezo.config.{ConfigLoadException, DerivedConfig, EventListenerConfig}
 import com.rezo.kafka.consumers.TransactionEventConsumer
-import com.rezo.kafka.producers.TransactionEventProducer
+import com.rezo.kafka.producers.CreateUserEventProducer
 import pureconfig.ConfigSource
 import zio.*
 
@@ -17,18 +17,13 @@ object EventListener extends ZIOAppDefault {
     config.transactionEvents
   )
 
-  private val transactionEventProducer = new TransactionEventProducer(
+  private val transactionEventProducer = new CreateUserEventProducer(
     config.transactionEvents
   )
 
   def run: ZIO[ZIOAppArgs & Scope, Throwable, Unit] =
     for {
       f <- transactionEventConsumer.run.fork
-      _ <-
-        Clock.currentDateTime
-          .flatMap { time => transactionEventProducer.produce(time) }
-          .schedule(Schedule.spaced(1.second))
-          .provide(transactionEventProducer.producer)
       _ <- f.join
     } yield ()
 
