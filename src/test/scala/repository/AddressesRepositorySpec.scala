@@ -1,13 +1,10 @@
 package repository
 
+import com.rezo.models.Address
+import com.rezo.repository.{AccountsRepository, AddressesRepository, UsersRepository}
 import fixtures.UsersFixtures
-import models.Address
 import repository.AddressesRepositorySpec.test
-import repository.Exceptions.{
-  MissingAccountByAccountId,
-  MissingAddressByAddressId,
-  UniqueViolationAccountIdAddress
-}
+import com.rezo.repository.Exceptions.{MissingAccountByAccountId, MissingAddressByAddressId, UniqueViolationAccountIdAddress}
 import zio.ZIO
 import zio.test.*
 import zio.test.Assertion.*

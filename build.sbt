@@ -30,7 +30,7 @@ lazy val root = project
       "org.scalikejdbc" %% "scalikejdbc" % "4.3.2",
 
       // config
-      "com.typesafe" % "config" % "1.4.3",
+      "com.typesafe" % "com/rezo/config" % "1.4.3",
       "com.github.pureconfig" %% "pureconfig-core" % "0.17.8",
       // Flyway
       "org.flywaydb" % "flyway-core" % "11.3.2",

@@ -1,9 +1,9 @@
 package repository.mocks
 
-import models.Account
-import repository.AccountsRepositoryTrait
-import repository.Exceptions.RepositoryException
-import utils.ZioTypes.RezoDBTask
+import com.rezo.models.Account
+import com.rezo.repository.AccountsRepositoryTrait
+import com.rezo.repository.Exceptions.RepositoryException
+import com.rezo.utils.ZioTypes.RezoDBTask
 import zio.mock.*
 import zio.{URLayer, ZLayer}
 

@@ -1,15 +1,11 @@
 package services
 
-import models.User
-import repository.Exceptions.{
-  MissingUserByEmail,
-  MissingUserById,
-  UnexpectedError,
-  UniqueViolationUser
-}
-import repository.UsersRepositoryTrait
+import com.rezo.models.User
+import com.rezo.repository.UsersRepositoryTrait
+import com.rezo.repository.Exceptions.{MissingUserByEmail, MissingUserById, UnexpectedError, UniqueViolationUser}
 import repository.mocks.UsersRepositoryMock
-import services.Exceptions.{DatabaseConflict, MissingDatabaseObject, Unexpected}
+import com.rezo.services.Exceptions.{DatabaseConflict, MissingDatabaseObject, Unexpected}
+import com.rezo.services.UsersService
 import zio.*
 import zio.mock.Expectation.*
 import zio.test.*

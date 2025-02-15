@@ -1,11 +1,8 @@
 package repository
 
 import fixtures.UsersFixtures
-import repository.Exceptions.{
-  MissingUserByEmail,
-  MissingUserById,
-  UniqueViolationUser
-}
+import com.rezo.repository.Exceptions.{MissingUserByEmail, MissingUserById, UniqueViolationUser}
+import com.rezo.repository.UsersRepository
 import repository.UsersRepositorySpec.test
 import zio.ZIO
 import zio.test.*

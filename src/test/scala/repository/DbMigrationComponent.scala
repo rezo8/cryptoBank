@@ -1,6 +1,6 @@
 package repository
 
-import config.DatabaseConfig
+import com.rezo.config.DatabaseConfig
 import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.output.MigrateResult
 import zio.*

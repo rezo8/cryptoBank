@@ -1,6 +1,6 @@
 package fixtures
 
-import models.{Account, Transaction, TransactionValue}
+import com.rezo.models.{Account, Transaction, TransactionValue}
 
 import java.time.Instant
 import java.util.UUID

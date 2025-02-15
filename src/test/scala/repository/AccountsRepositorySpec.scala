@@ -1,8 +1,9 @@
 package repository
 
+import com.rezo.models.Account
 import fixtures.UsersFixtures
-import models.Account
-import repository.Exceptions._
+import com.rezo.repository.Exceptions.*
+import com.rezo.repository.{AccountsRepository, UsersRepository}
 import zio.ZIO
 import zio.test.*
 import zio.test.Assertion.*

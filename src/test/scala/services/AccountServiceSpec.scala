@@ -1,11 +1,12 @@
 package services
 
+import com.rezo.models.Account
+import com.rezo.repository.AccountsRepositoryTrait
 import fixtures.RepositoryFixtures.nextAccount
-import models.Account
-import repository.AccountsRepositoryTrait
-import repository.Exceptions.*
+import com.rezo.repository.Exceptions.*
+import com.rezo.services.AccountsService
 import repository.mocks.AccountsRepositoryMock
-import services.Exceptions.{DatabaseConflict, MissingDatabaseObject, Unexpected}
+import com.rezo.services.Exceptions.{DatabaseConflict, MissingDatabaseObject, Unexpected}
 import zio.*
 import zio.mock.Expectation.*
 import zio.test.*

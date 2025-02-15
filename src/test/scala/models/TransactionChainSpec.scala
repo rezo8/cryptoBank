@@ -1,5 +1,6 @@
 package models
 
+import com.rezo.models.TransactionChain
 import fixtures.BookkeepingFixtures.*
 import org.scalatest.*
 import org.scalatest.flatspec.*

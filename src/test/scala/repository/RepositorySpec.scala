@@ -1,7 +1,7 @@
 package repository
 
 import cats.effect.IO
-import config.DatabaseConfig
+import com.rezo.config.DatabaseConfig
 import doobie.util.transactor.Transactor
 import doobie.util.transactor.Transactor.Aux
 import org.flywaydb.core.api.output.MigrateResult
