@@ -2,7 +2,7 @@ package com.rezo.services
 
 import com.rezo.models.{Address, BitcoinAddressValue}
 import com.rezo.repository.{AddressesRepository, AddressesRepositoryTrait, UsersRepositoryTrait}
-import com.rezo.utils.ZioTypes.RezoTask
+import com.rezo.utils.ZioTypes.RezoServerTask
 import zio.*
 
 import java.util.UUID
@@ -14,7 +14,7 @@ class AddressesService(addressRepository: AddressesRepositoryTrait)
       accountId: UUID,
       address: String,
       balance: BitcoinAddressValue
-  ): RezoTask[UUID] = {
+  ): RezoServerTask[UUID] = {
     addressRepository
       .createAddress(accountId, address, balance.satoshis)
       .mapError(handleRepositoryExceptions)
@@ -22,13 +22,13 @@ class AddressesService(addressRepository: AddressesRepositoryTrait)
 
   def getAddressByAddressId(
       addressId: UUID
-  ): RezoTask[Address] = {
+  ): RezoServerTask[Address] = {
     addressRepository
       .getAddressByAddressId(addressId)
       .mapError(handleRepositoryExceptions)
   }
 
-  def getAddressesByAccountId(accountId: UUID): RezoTask[List[Address]] = {
+  def getAddressesByAccountId(accountId: UUID): RezoServerTask[List[Address]] = {
     addressRepository
       .getAddressesByAccountId(accountId)
       .mapError(handleRepositoryExceptions)
@@ -37,7 +37,7 @@ class AddressesService(addressRepository: AddressesRepositoryTrait)
   def updateBitcoinAddressValue(
       addressId: UUID,
       addressValue: BitcoinAddressValue
-  ): RezoTask[RuntimeFlags] = {
+  ): RezoServerTask[RuntimeFlags] = {
     addressRepository
       .updateAddressValue(addressId, addressValue.satoshis)
       .mapError(handleRepositoryExceptions)

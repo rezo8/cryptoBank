@@ -1,4 +1,4 @@
-package repository.mocks
+package com.rezo.repository.mocks
 
 import com.rezo.models.Address
 import com.rezo.repository.AddressesRepositoryTrait

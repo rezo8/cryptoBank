@@ -1,11 +1,23 @@
-package services
+package com.rezo.services
 
+import com.rezo.kafka.producers.CreateUserEventProducerTrait
+import com.rezo.kafka.producers.mocks.CreateUserEventProducerMock
 import com.rezo.models.User
+import com.rezo.repository.Exceptions.{
+  MissingUserByEmail,
+  MissingUserById,
+  UnexpectedError,
+  UniqueViolationUser
+}
 import com.rezo.repository.UsersRepositoryTrait
-import com.rezo.repository.Exceptions.{MissingUserByEmail, MissingUserById, UnexpectedError, UniqueViolationUser}
-import repository.mocks.UsersRepositoryMock
-import com.rezo.services.Exceptions.{DatabaseConflict, MissingDatabaseObject, Unexpected}
-import com.rezo.services.UsersService
+import com.rezo.repository.mocks.UsersRepositoryMock
+import com.rezo.services.Exceptions.{
+  DatabaseConflict,
+  MissingDatabaseObject,
+  Unexpected
+}
+import org.apache.kafka.clients.producer.RecordMetadata
+import org.apache.kafka.common.TopicPartition
 import zio.*
 import zio.mock.Expectation.*
 import zio.test.*
@@ -24,7 +36,7 @@ object UsersServiceSpec extends ZIOSpecDefault {
   val phoneNumber = "1234567890"
   val passwordHash = "hash"
   val user: User = User(
-    Some(userId),
+    userId,
     userTypeId,
     firstName,
     lastName,
@@ -34,6 +46,16 @@ object UsersServiceSpec extends ZIOSpecDefault {
     Instant.now,
     Instant.now
   )
+
+  val defaultRecordMetadata = new RecordMetadata(
+    new org.apache.kafka.common.TopicPartition("topic", 0),
+    0L,
+    1,
+    0L,
+    1,
+    1
+  )
+
   def spec: Spec[Any, Throwable] = suite("UsersServiceSpec")(
     suite("#createUser") {
       val program = for {
@@ -47,9 +69,10 @@ object UsersServiceSpec extends ZIOSpecDefault {
           passwordHash
         )
       } yield result
+
       Seq(
-        test("returns a UUID on success") {
-          val mockEnv: ULayer[UsersRepositoryTrait] =
+        test("returns the created user on success") {
+          val mockRepo: ULayer[UsersRepositoryTrait] =
             UsersRepositoryMock
               .CreateUser(
                 equalTo(
@@ -62,17 +85,23 @@ object UsersServiceSpec extends ZIOSpecDefault {
                     passwordHash
                   )
                 ),
-                value(userId)
+                value(user)
               )
               .toLayer
 
-          assertZIO(program.provideLayer(mockEnv >>> UsersService.live))(
-            equalTo(userId)
-          )
+          val mockSuccessProducer: ULayer[CreateUserEventProducerTrait] =
+            CreateUserEventProducerMock
+              .Produce(equalTo(user), value(defaultRecordMetadata))
+              .toLayer
+
+          val testLayer =
+            (mockRepo ++ mockSuccessProducer) >>> UsersService.live
+
+          assertZIO(program.provideLayer(testLayer))(equalTo(user))
         },
         test("fails with UniqueViolation response on UniqueViolationUser") {
           val uniqueViolationUser = UniqueViolationUser(email, phoneNumber)
-          val mockEnv: ULayer[UsersRepositoryTrait] =
+          val mockRepo: ULayer[UsersRepositoryTrait] =
             UsersRepositoryMock
               .CreateUser(
                 equalTo(
@@ -89,16 +118,19 @@ object UsersServiceSpec extends ZIOSpecDefault {
               )
               .toLayer
 
+          val mockNoCallProducer: ULayer[CreateUserEventProducerTrait] =
+            CreateUserEventProducerMock.empty // Expect no calls to `produce`
+
+          val testLayer =
+            (mockRepo ++ mockNoCallProducer) >>> UsersService.live
+
           assertZIO(program.exit)(
-            fails(
-              equalTo(DatabaseConflict(uniqueViolationUser.getMessage))
-            )
-          ).provideLayer(mockEnv >>> UsersService.live)
+            fails(equalTo(DatabaseConflict(uniqueViolationUser.getMessage)))
+          ).provideLayer(testLayer)
         },
         test("fails with Unexpected response on unexpected error") {
           val randomException = UnexpectedError("test")
-
-          val mockEnv: ULayer[UsersRepositoryTrait] =
+          val mockRepo: ULayer[UsersRepositoryTrait] =
             UsersRepositoryMock
               .CreateUser(
                 equalTo(
@@ -115,8 +147,15 @@ object UsersServiceSpec extends ZIOSpecDefault {
               )
               .toLayer
 
-          assertZIO(program.exit)(fails(equalTo(Unexpected(randomException))))
-            .provideLayer(mockEnv >>> UsersService.live)
+          val mockNoCallProducer: ULayer[CreateUserEventProducerTrait] =
+            CreateUserEventProducerMock.empty // Expect no calls to `produce`
+
+          val testLayer =
+            (mockRepo ++ mockNoCallProducer) >>> UsersService.live
+
+          assertZIO(program.exit)(
+            fails(equalTo(Unexpected(randomException)))
+          ).provideLayer(testLayer)
         }
       )
     },
@@ -126,20 +165,27 @@ object UsersServiceSpec extends ZIOSpecDefault {
         usersService <- ZIO.service[UsersService]
         result <- usersService.getUserByEmail(email)
       } yield result
+
       Seq(
         test("returns a User on success") {
-          val mockEnv: ULayer[UsersRepositoryTrait] =
+          val mockRepo: ULayer[UsersRepositoryTrait] =
             UsersRepositoryMock
               .GetUserByEmail(equalTo(email), value(user))
               .toLayer
 
-          assertZIO(program.provideLayer(mockEnv >>> UsersService.live))(
+          val mockNoCallProducer: ULayer[CreateUserEventProducerTrait] =
+            CreateUserEventProducerMock.empty // Expect no calls to `produce`
+
+          val testLayer =
+            (mockRepo ++ mockNoCallProducer) >>> UsersService.live
+
+          assertZIO(program.provideLayer(testLayer))(
             equalTo(user)
           )
         },
         test("fails with MissingDatabaseObject on MissingUserByEmail error") {
           val missingUserByEmail = MissingUserByEmail(email)
-          val mockEnv: ULayer[UsersRepositoryTrait] =
+          val mockRepo: ULayer[UsersRepositoryTrait] =
             UsersRepositoryMock
               .GetUserByEmail(
                 equalTo(email),
@@ -147,15 +193,19 @@ object UsersServiceSpec extends ZIOSpecDefault {
               )
               .toLayer
 
+          val mockNoCallProducer: ULayer[CreateUserEventProducerTrait] =
+            CreateUserEventProducerMock.empty // Expect no calls to `produce`
+
+          val testLayer =
+            (mockRepo ++ mockNoCallProducer) >>> UsersService.live
+
           assertZIO(program.exit)(
-            fails(
-              equalTo(MissingDatabaseObject(missingUserByEmail.getMessage))
-            )
-          ).provideLayer(mockEnv >>> UsersService.live)
+            fails(equalTo(MissingDatabaseObject(missingUserByEmail.getMessage)))
+          ).provideLayer(testLayer)
         },
         test("fails with Unexpected response on unexpected error") {
           val randomException = UnexpectedError("test")
-          val mockEnv: ULayer[UsersRepositoryTrait] =
+          val mockRepo: ULayer[UsersRepositoryTrait] =
             UsersRepositoryMock
               .GetUserByEmail(
                 equalTo(email),
@@ -163,8 +213,15 @@ object UsersServiceSpec extends ZIOSpecDefault {
               )
               .toLayer
 
-          assertZIO(program.exit)(fails(equalTo(Unexpected(randomException))))
-            .provideLayer(mockEnv >>> UsersService.live)
+          val mockNoCallProducer: ULayer[CreateUserEventProducerTrait] =
+            CreateUserEventProducerMock.empty // Expect no calls to `produce`
+
+          val testLayer =
+            (mockRepo ++ mockNoCallProducer) >>> UsersService.live
+
+          assertZIO(program.exit)(
+            fails(equalTo(Unexpected(randomException)))
+          ).provideLayer(testLayer)
         }
       )
     },
@@ -173,42 +230,58 @@ object UsersServiceSpec extends ZIOSpecDefault {
         usersService <- ZIO.service[UsersService]
         result <- usersService.getUserById(userId)
       } yield result
+
       Seq(
         test("returns a User on success") {
-          val mockEnv: ULayer[UsersRepositoryTrait] =
+          val mockRepo: ULayer[UsersRepositoryTrait] =
             UsersRepositoryMock
               .GetUser(equalTo(userId), value(user))
               .toLayer
 
-          assertZIO(program.provideLayer(mockEnv >>> UsersService.live))(
+          val mockNoCallProducer: ULayer[CreateUserEventProducerTrait] =
+            CreateUserEventProducerMock.empty // Expect no calls to `produce`
+
+          val testLayer =
+            (mockRepo ++ mockNoCallProducer) >>> UsersService.live
+          assertZIO(program.provideLayer(testLayer))(
             equalTo(user)
           )
         },
         test("fails with MissingDatabaseObject on MissingUserByEmail error") {
           val missingUserById = MissingUserById(userId)
-          val mockEnv: ULayer[UsersRepositoryTrait] =
+          val mockRepo: ULayer[UsersRepositoryTrait] =
             UsersRepositoryMock
               .GetUser(equalTo(userId), failure(missingUserById))
               .toLayer
 
+          // Mock for "no call" producer (used in all other tests)
+          val mockNoCallProducer: ULayer[CreateUserEventProducerTrait] =
+            CreateUserEventProducerMock.empty // Expect no calls to `produce`
+
+          val testLayer =
+            (mockRepo ++ mockNoCallProducer) >>> UsersService.live
+
           assertZIO(program.exit)(
-            fails(
-              equalTo(MissingDatabaseObject(missingUserById.getMessage))
-            )
-          ).provideLayer(mockEnv >>> UsersService.live)
+            fails(equalTo(MissingDatabaseObject(missingUserById.getMessage)))
+          ).provideLayer(testLayer)
         },
         test("fails with Unexpected response on unexpected error") {
           val randomException = UnexpectedError("test")
-          val mockEnv: ULayer[UsersRepositoryTrait] =
+          val mockRepo: ULayer[UsersRepositoryTrait] =
             UsersRepositoryMock
               .GetUser(equalTo(userId), failure(randomException))
               .toLayer
 
+            // Mock for "no call" producer (used in all other tests)
+          val mockNoCallProducer: ULayer[CreateUserEventProducerTrait] =
+            CreateUserEventProducerMock.empty // Expect no calls to `produce`
+
+          val testLayer =
+            (mockRepo ++ mockNoCallProducer) >>> UsersService.live
+
           assertZIO(program.exit)(
-            fails(
-              equalTo(Unexpected(randomException))
-            )
-          ).provideLayer(mockEnv >>> UsersService.live)
+            fails(equalTo(Unexpected(randomException)))
+          ).provideLayer(testLayer)
         }
       )
     }

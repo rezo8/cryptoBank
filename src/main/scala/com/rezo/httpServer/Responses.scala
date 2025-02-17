@@ -17,23 +17,8 @@ object Responses {
       DeriveJsonEncoder.gen[MessageResponse]
   }
 
-  final case class LoadUserResponse(
-      id: UUID,
-      firstName: String,
-      lastName: String,
-      email: String,
-      phoneNumber: String
-  ) extends ServerResponse
+  final case class LoadUserResponse(user: User) extends ServerResponse
   object LoadUserResponse {
-    def fromUser(user: User): LoadUserResponse = {
-      LoadUserResponse(
-        user.userId,
-        firstName = user.firstName,
-        lastName = user.lastName,
-        email = user.email,
-        phoneNumber = user.phoneNumber
-      )
-    }
     implicit val encoder: JsonEncoder[LoadUserResponse] =
       DeriveJsonEncoder.gen[LoadUserResponse]
   }

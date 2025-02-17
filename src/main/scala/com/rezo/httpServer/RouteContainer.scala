@@ -2,8 +2,12 @@ package com.rezo.httpServer
 
 import Requests.ServerRequest
 import Responses.ServerResponse
-import com.rezo.services.Exceptions.{ServerException, Unexpected, UnparseableRequest}
-import com.rezo.utils.ZioTypes.RezoTask
+import com.rezo.services.Exceptions.{
+  ServerException,
+  Unexpected,
+  UnparseableRequest
+}
+import com.rezo.utils.ZioTypes.RezoServerTask
 import zio.*
 import zio.http.*
 import zio.json.*
@@ -28,7 +32,7 @@ trait RouteContainer {
   def handleServerResponseWithRequest[
       A <: ServerRequest,
       B <: ServerResponse
-  ](req: Request, serverProc: A => RezoTask[B])(implicit
+  ](req: Request, serverProc: A => RezoServerTask[B])(implicit
       dec: zio.json.JsonDecoder[A],
       enc: zio.json.JsonEncoder[B]
   ): ZIO[Any, Nothing, Response] = {
@@ -36,7 +40,7 @@ trait RouteContainer {
   }
 
   def handleServerResponse[A <: ServerResponse](
-      serverProc: RezoTask[A]
+      serverProc: RezoServerTask[A]
   )(implicit enc: zio.json.JsonEncoder[A]): ZIO[Any, Nothing, Response] = {
     serverProc.fold(
       error =>

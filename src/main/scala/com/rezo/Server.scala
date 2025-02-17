@@ -10,6 +10,7 @@ import com.rezo.httpServer.{
   BaseServer,
   UserRoutes
 }
+import com.rezo.kafka.producers.CreateUserEventProducer
 import com.rezo.repository.{
   AccountsRepository,
   AddressesRepository,
@@ -52,6 +53,11 @@ object Server extends ZIOAppDefault with BaseServer {
 
   private val accountsRepository = new AccountsRepository(main.transactor)
 
+  // Kafka
+  private val createUserEventProducer = new CreateUserEventProducer(
+    config.transactionEvents
+  )
+
   // Routes
   override val addressesRoutes: AddressesRoutes = new AddressesRoutes:
     override val addressesService: AddressesService =
@@ -61,7 +67,8 @@ object Server extends ZIOAppDefault with BaseServer {
       scala.concurrent.ExecutionContext.Implicits.global
 
   override val userRoutes: UserRoutes = new UserRoutes:
-    override val usersService: UsersService = UsersService(main.usersRepository)
+    override val usersService: UsersService =
+      new UsersService(main.usersRepository, main.createUserEventProducer)
     override implicit val ec: ExecutionContext =
       scala.concurrent.ExecutionContext.Implicits.global
 

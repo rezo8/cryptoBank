@@ -1,10 +1,18 @@
-package repository
+package com.rezo.repository
 
 import com.rezo.models.Address
-import com.rezo.repository.{AccountsRepository, AddressesRepository, UsersRepository}
-import fixtures.UsersFixtures
-import repository.AddressesRepositorySpec.test
-import com.rezo.repository.Exceptions.{MissingAccountByAccountId, MissingAddressByAddressId, UniqueViolationAccountIdAddress}
+import com.rezo.repository.{
+  AccountsRepository,
+  AddressesRepository,
+  UsersRepository
+}
+import AddressesRepositorySpec.test
+import com.rezo.fixtures.UsersFixtures
+import com.rezo.repository.Exceptions.{
+  MissingAccountByAccountId,
+  MissingAddressByAddressId,
+  UniqueViolationAccountIdAddress
+}
 import zio.ZIO
 import zio.test.*
 import zio.test.Assertion.*
@@ -24,7 +32,7 @@ object AddressesRepositorySpec extends ZIOSpecDefault with RepositorySpec {
   // Shared setup logic
   private def setupUserAccountAndAddress = for {
     user <- ZIO.succeed(UsersFixtures.nextUser())
-    userId <- usersRepository.createUser(
+    dbUser <- usersRepository.createUser(
       user.userTypeId,
       user.firstName,
       user.lastName,
@@ -33,7 +41,7 @@ object AddressesRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       user.passwordHash
     )
     accountId <- accountsRepository.createAccount(
-      userId,
+      dbUser.userId,
       "BTC",
       "test account"
     )
@@ -42,7 +50,7 @@ object AddressesRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       addressLocation,
       addressValue
     )
-  } yield (user, userId, accountId, addressId)
+  } yield (dbUser, accountId, addressId)
 
   private val addressLocation = "Test cryptoType loc"
   private val addressValue = Random.between(0L, 10_000_000L)
@@ -63,7 +71,7 @@ object AddressesRepositorySpec extends ZIOSpecDefault with RepositorySpec {
     suite("createAddress")(
       test("properly creates and loads an address by id") {
         for {
-          (_, _, accountId, addressId) <- setupUserAccountAndAddress
+          (_, accountId, addressId) <- setupUserAccountAndAddress
           loadedAddress <- addressRepository.getAddressByAddressId(addressId)
         } yield assertTrue({
           Address(
@@ -93,7 +101,7 @@ object AddressesRepositorySpec extends ZIOSpecDefault with RepositorySpec {
         "fails with UniqueViolationAccountIdAddress when account already has cryptoType"
       ) {
         for {
-          (_, _, accountId, addressId) <- setupUserAccountAndAddress
+          (_, accountId, addressId) <- setupUserAccountAndAddress
           test <- assertZIO(
             addressRepository
               .createAddress(
@@ -116,7 +124,7 @@ object AddressesRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       test("can update cryptoType owned amount") {
         val newValue = addressValue - 1L
         for {
-          (_, _, accountId, addressId) <- setupUserAccountAndAddress
+          (_, accountId, addressId) <- setupUserAccountAndAddress
           _ <- addressRepository.updateAddressValue(addressId, newValue)
           loadedAddress <- addressRepository.getAddressByAddressId(
             addressId
@@ -148,7 +156,7 @@ object AddressesRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       test("can create and load multiple addresses for a user") {
         val secondAddressLoc = "Test cryptoType loc 2"
         for {
-          (_, _, accountId, addressId) <- setupUserAccountAndAddress
+          (_, accountId, addressId) <- setupUserAccountAndAddress
           addressId <- addressRepository.createAddress(
             accountId,
             secondAddressLoc,

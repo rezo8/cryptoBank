@@ -1,4 +1,4 @@
-package repository
+package com.rezo.repository
 
 import cats.effect.IO
 import com.rezo.config.DatabaseConfig

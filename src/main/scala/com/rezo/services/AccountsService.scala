@@ -3,7 +3,7 @@ package com.rezo.services
 import com.rezo.models.Account
 import com.rezo.repository.AccountsRepositoryTrait
 import com.rezo.repository.Exceptions.RepositoryException
-import com.rezo.utils.ZioTypes.RezoTask
+import com.rezo.utils.ZioTypes.RezoServerTask
 import zio.*
 
 import java.util.UUID
@@ -15,7 +15,7 @@ class AccountsService(accountsRepository: AccountsRepositoryTrait)
       userId: UUID,
       cryptoType: String,
       accountName: String
-  ): RezoTask[UUID] = {
+  ): RezoServerTask[UUID] = {
     accountsRepository
       .createAccount(userId, cryptoType, accountName)
       .mapError(handleRepositoryExceptions)
@@ -23,13 +23,13 @@ class AccountsService(accountsRepository: AccountsRepositoryTrait)
 
   def getAccountByAccountId(
       accountId: UUID
-  ): RezoTask[Account] = {
+  ): RezoServerTask[Account] = {
     accountsRepository
       .getAccountByAccountId(accountId)
       .mapError(handleRepositoryExceptions)
   }
 
-  def getAccountsByUserId(userId: UUID): RezoTask[List[Account]] = {
+  def getAccountsByUserId(userId: UUID): RezoServerTask[List[Account]] = {
     accountsRepository
       .getAccountsByUserId(userId)
       .mapError(handleRepositoryExceptions)
@@ -38,7 +38,7 @@ class AccountsService(accountsRepository: AccountsRepositoryTrait)
   def getAccountsByUserIdAndCryptoType(
       userId: UUID,
       cryptoType: String
-  ): RezoTask[Account] = {
+  ): RezoServerTask[Account] = {
     accountsRepository
       .getAccountsByUserIdAndCryptoType(userId, cryptoType)
       .mapError(handleRepositoryExceptions)

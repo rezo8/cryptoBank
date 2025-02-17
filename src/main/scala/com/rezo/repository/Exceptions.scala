@@ -1,9 +1,11 @@
 package com.rezo.repository
 
+import com.rezo.utils.ZioTypes.RezoException
+
 import java.util.UUID
 
 object Exceptions {
-  trait RepositoryException extends Exception
+  trait RepositoryException extends RezoException
   trait UnexpectedSqlError extends RepositoryException
 
   trait ExcessiveUpdate extends RepositoryException

@@ -1,10 +1,11 @@
 package com.rezo.services
 
+import com.rezo.utils.ZioTypes.RezoException
 import zio.http.Status
 
 object Exceptions {
 
-  trait ServerException extends Exception {
+  trait ServerException extends RezoException {
     def status: Status.Error = Status.InternalServerError
   }
 

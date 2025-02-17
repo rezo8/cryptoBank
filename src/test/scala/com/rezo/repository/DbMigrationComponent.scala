@@ -1,4 +1,4 @@
-package repository
+package com.rezo.repository
 
 import com.rezo.config.DatabaseConfig
 import org.flywaydb.core.Flyway

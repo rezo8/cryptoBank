@@ -1,13 +1,15 @@
-package repository
+package com.rezo.repository
 
-import fixtures.UsersFixtures
+import com.rezo.kafka.producers.CreateUserEventProducer
 import com.rezo.repository.Exceptions.{
   MissingUserByEmail,
   MissingUserById,
   UniqueViolationUser
 }
-import com.rezo.repository.UsersRepository
-import repository.UsersRepositorySpec.test
+import com.rezo.repository.{UsersRepository, UsersRepositoryTrait}
+import com.rezo.services.UsersService
+import UsersRepositorySpec.test
+import com.rezo.fixtures.UsersFixtures
 import zio.ZIO
 import zio.test.*
 import zio.test.Assertion.*
@@ -19,7 +21,7 @@ object UsersRepositorySpec extends ZIOSpecDefault with RepositorySpec {
 
   private def setupUser = for {
     user <- ZIO.succeed(UsersFixtures.nextUser())
-    userId <- usersRepository.createUser(
+    dbUser <- usersRepository.createUser(
       user.userTypeId,
       user.firstName,
       user.lastName,
@@ -27,17 +29,17 @@ object UsersRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       user.phoneNumber,
       user.passwordHash
     )
-  } yield (user, userId)
+  } yield user
 
   def spec: Spec[Any, Throwable] = suite("UsersRepositorySpec")(
     suite("getUser")(
       test("properly create and load user by id") {
         for {
-          (user, userId) <- setupUser
-          loadedUser <- usersRepository.getUser(userId)
+          user <- setupUser
+          loadedUser <- usersRepository.getUser(user.userId)
         } yield assertTrue(
           user.copy(
-            userId = userId,
+            userId = loadedUser.userId,
             createdAt = loadedUser.createdAt,
             updatedAt = loadedUser.updatedAt
           ) == loadedUser
@@ -55,14 +57,10 @@ object UsersRepositorySpec extends ZIOSpecDefault with RepositorySpec {
     suite("getUserByEmail")(
       test("properly create and load user by email") {
         for {
-          (user, userId) <- setupUser
+          user <- setupUser
           loadedUser <- usersRepository.getUserByEmail(user.email)
         } yield assertTrue(
-          user.copy(
-            userId = userId,
-            createdAt = loadedUser.createdAt,
-            updatedAt = loadedUser.updatedAt
-          ) == loadedUser
+          user == loadedUser
         )
       },
       test(
@@ -79,7 +77,7 @@ object UsersRepositorySpec extends ZIOSpecDefault with RepositorySpec {
         "fails with UniqueViolationUser when creating a user with duplicate email"
       ) {
         for {
-          (user, userId) <- setupUser
+          user <- setupUser
           duplicateUser = user.copy(phoneNumber =
             UsersFixtures.nextPhoneNumber()
           )

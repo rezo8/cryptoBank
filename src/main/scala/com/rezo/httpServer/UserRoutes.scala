@@ -16,7 +16,6 @@ import scala.concurrent.ExecutionContext
 
 abstract class UserRoutes extends RouteContainer {
   val usersService: UsersService
-  //  val createUserEventProducer: CreateUserEventProducer
   implicit val ec: ExecutionContext
   private val rootUrl = "users"
 
@@ -33,23 +32,31 @@ abstract class UserRoutes extends RouteContainer {
   private def handleLoadByEmail(email: String): ZIO[Any, Nothing, Response] = {
     handleServerResponse[LoadUserResponse](for {
       loadRes <- usersService.getUserByEmail(email)
-    } yield LoadUserResponse.fromUser(loadRes))
+    } yield LoadUserResponse(loadRes))
   }
 
   private def handleLoadById(id: UUID): ZIO[Any, Nothing, Response] = {
     handleServerResponse[LoadUserResponse](for {
       loadRes <- usersService.getUserById(id)
-    } yield LoadUserResponse.fromUser(loadRes))
+    } yield LoadUserResponse(loadRes))
+  }
+
+  val sideEffect: ZIO[Any, Throwable, Unit] = ZIO.attempt {
+    // Your side effect logic here
+    println("Running side effect")
   }
 
   private def handleCreateUser(
       req: Request
   ): ZIO[Any, Nothing, Response] = {
-    handleServerResponseWithRequest[CreateUserRequest, LoadUserResponse](
+    handleServerResponseWithRequest[
+      CreateUserRequest,
+      LoadUserResponse
+    ](
       req,
       (createUserRequest: CreateUserRequest) => {
-        usersService
-          .createUser(
+        for {
+          user <- usersService.createUser(
             userTypeId = UserType.intFromString(createUserRequest.userType),
             firstName = createUserRequest.firstName,
             lastName = createUserRequest.lastName,
@@ -58,16 +65,7 @@ abstract class UserRoutes extends RouteContainer {
             passwordHash =
               BCrypt.hashpw(createUserRequest.password, BCrypt.gensalt())
           )
-          // TODO have create user return user so we can do the create event.
-          .map(userId =>
-            LoadUserResponse(
-              userId,
-              createUserRequest.firstName,
-              createUserRequest.lastName,
-              createUserRequest.email,
-              createUserRequest.phoneNumber
-            )
-          )
+        } yield LoadUserResponse(user)
       }
     )
   }

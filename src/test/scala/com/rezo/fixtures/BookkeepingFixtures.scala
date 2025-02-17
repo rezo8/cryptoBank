@@ -1,4 +1,4 @@
-package fixtures
+package com.rezo.fixtures
 
 import com.rezo.models.{Account, Transaction, TransactionValue}
 

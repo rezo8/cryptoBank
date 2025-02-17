@@ -1,7 +1,7 @@
-package repository
+package com.rezo.repository
 
+import com.rezo.fixtures.UsersFixtures
 import com.rezo.models.Account
-import fixtures.UsersFixtures
 import com.rezo.repository.Exceptions.*
 import com.rezo.repository.{AccountsRepository, UsersRepository}
 import zio.ZIO
@@ -21,7 +21,7 @@ object AccountsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
   // Shared setup for creating a user and account
   private def setupUserAndAccount = for {
     user <- ZIO.succeed(UsersFixtures.nextUser())
-    userId <- usersRepository.createUser(
+    dbUser <- usersRepository.createUser(
       user.userTypeId,
       user.firstName,
       user.lastName,
@@ -30,22 +30,22 @@ object AccountsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       user.passwordHash
     )
     accountId <- accountsRepository.createAccount(
-      userId,
+      dbUser.userId,
       defaultCryptoType,
       "test account"
     )
-  } yield (user, userId, accountId)
+  } yield (user, accountId)
 
   def spec: Spec[Any, Throwable] = suite("AccountsRepositorySpec")(
     suite("createAccount")(
       test("properly creates and loads an account") {
         for {
-          (_, userId, accountId) <- setupUserAndAccount
+          (user, accountId) <- setupUserAndAccount
           loadedAccount <- accountsRepository.getAccountByAccountId(accountId)
         } yield assertTrue(
           loadedAccount == Account(
             accountId = accountId,
-            userId = userId,
+            userId = user.userId,
             cryptoType = defaultCryptoType,
             balance = 0,
             accountName = "test account",
@@ -68,14 +68,16 @@ object AccountsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
         "fails with UniqueViolationUserCryptoType when creating two accounts for a user with the same cryptoType"
       ) {
         for {
-          (_, userId, _) <- setupUserAndAccount
+          (user, _) <- setupUserAndAccount
           test <- assertZIO(
             accountsRepository
-              .createAccount(userId, defaultCryptoType, "test account")
+              .createAccount(user.userId, defaultCryptoType, "test account")
               .exit
           )(
             fails(
-              equalTo(UniqueViolationUserCryptoType(userId, defaultCryptoType))
+              equalTo(
+                UniqueViolationUserCryptoType(user.userId, defaultCryptoType)
+              )
             )
           )
         } yield test
@@ -84,12 +86,12 @@ object AccountsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
     suite("getAccountByAccountId")(
       test("properly loads an account by accountId") {
         for {
-          (_, userId, accountId) <- setupUserAndAccount
+          (user, accountId) <- setupUserAndAccount
           loadedAccount <- accountsRepository.getAccountByAccountId(accountId)
         } yield assertTrue(
           loadedAccount == Account(
             accountId = accountId,
-            userId = userId,
+            userId = user.userId,
             cryptoType = defaultCryptoType,
             balance = 0,
             accountName = "test account",
@@ -110,13 +112,13 @@ object AccountsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
     suite("getAccountsByUserIdAndCryptoType")(
       test("properly loads an account by userId and cryptoType") {
         for {
-          (_, userId, accountId) <- setupUserAndAccount
+          (user, accountId) <- setupUserAndAccount
           loadedAccount <- accountsRepository
-            .getAccountsByUserIdAndCryptoType(userId, defaultCryptoType)
+            .getAccountsByUserIdAndCryptoType(user.userId, defaultCryptoType)
         } yield assertTrue(
           loadedAccount == Account(
             accountId = accountId,
-            userId = userId,
+            userId = user.userId,
             cryptoType = defaultCryptoType,
             balance = 0,
             accountName = "test account",
@@ -129,14 +131,16 @@ object AccountsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
         "fails with MissingAccountByUserIdAndCryptoType when loading an account with a non-existent cryptoType"
       ) {
         for {
-          (_, userId, _) <- setupUserAndAccount
+          (user, _) <- setupUserAndAccount
           test <- assertZIO(
             accountsRepository
-              .getAccountsByUserIdAndCryptoType(userId, "DNE Crypto")
+              .getAccountsByUserIdAndCryptoType(user.userId, "DNE Crypto")
               .exit
           )(
             fails(
-              equalTo(MissingAccountByUserIdAndCryptoType(userId, "DNE Crypto"))
+              equalTo(
+                MissingAccountByUserIdAndCryptoType(user.userId, "DNE Crypto")
+              )
             )
           )
         } yield test
@@ -145,13 +149,13 @@ object AccountsRepositorySpec extends ZIOSpecDefault with RepositorySpec {
     suite("getAccountsByUserId")(
       test("properly loads multiple accounts for a user") {
         for {
-          (_, userId, _) <- setupUserAndAccount
+          (user, _) <- setupUserAndAccount
           accountId2 <- accountsRepository.createAccount(
-            userId,
+            user.userId,
             "ETH",
             "test account"
           )
-          loadedAccounts <- accountsRepository.getAccountsByUserId(userId)
+          loadedAccounts <- accountsRepository.getAccountsByUserId(user.userId)
         } yield assertTrue(
           loadedAccounts.size == 2 &&
             loadedAccounts.exists(_.cryptoType == "ETH") &&

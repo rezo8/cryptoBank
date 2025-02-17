@@ -28,7 +28,7 @@ trait UsersRepositoryTrait {
       email: String,
       phoneNumber: String,
       passwordHash: String
-  ): RezoDBTask[UUID]
+  ): RezoDBTask[User]
 }
 
 class UsersRepository(transactor: Aux[IO, Unit]) extends UsersRepositoryTrait {
@@ -73,13 +73,13 @@ class UsersRepository(transactor: Aux[IO, Unit]) extends UsersRepositoryTrait {
       email: String,
       phoneNumber: String,
       passwordHash: String
-  ): RezoDBTask[UUID] =
+  ): RezoDBTask[User] =
     sql"""
       INSERT INTO users (userTypeId, firstName, lastName, email, phoneNumber, passwordHash)
       VALUES ($userTypeId, $firstName, $lastName, $email, $phoneNumber, $passwordHash)
-      RETURNING userId
+      RETURNING userId, userTypeId, firstName, lastName, email, phoneNumber, passwordHash, createdAt, updatedAt
     """
-      .query[UUID]
+      .query[User]
       .unique
       .transact(transactor)
       .attemptSomeSqlState { case sqlstate.class23.UNIQUE_VIOLATION =>

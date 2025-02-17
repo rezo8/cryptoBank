@@ -1,12 +1,17 @@
-package services
+package com.rezo.services
 
 import com.rezo.models.BitcoinAddressValue
 import com.rezo.repository.AddressesRepositoryTrait
-import fixtures.RepositoryFixtures.nextAddress
+import com.rezo.fixtures.RepositoryFixtures.nextAddress
 import com.rezo.repository.Exceptions.*
+import com.rezo.repository.mocks.AddressesRepositoryMock
 import com.rezo.services.AddressesService
-import repository.mocks.AddressesRepositoryMock
-import com.rezo.services.Exceptions.{DatabaseConflict, MissingDatabaseObject, Unexpected, UnexpectedUpdate}
+import com.rezo.services.Exceptions.{
+  DatabaseConflict,
+  MissingDatabaseObject,
+  Unexpected,
+  UnexpectedUpdate
+}
 import zio.*
 import zio.mock.Expectation.*
 import zio.test.*

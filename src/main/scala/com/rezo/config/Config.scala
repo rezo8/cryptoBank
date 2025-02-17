@@ -12,7 +12,10 @@ case class EventListenerConfig(
 case class TransactionEventsTopicConfig(
     topicName: String,
     consumer: ConsumerConfig,
-    //    producer: ProducerConfig,
+    bootstrapServers: List[String]
+)
+
+case class ProducerConfig(
     bootstrapServers: List[String]
 )
 
@@ -24,7 +27,8 @@ case class ConsumerConfig(
 //case class ProducerConfig()
 case class ServerConfig(
     database: DatabaseConfig,
-    serverMetadataConfig: ServerMetadataConfig
+    serverMetadataConfig: ServerMetadataConfig,
+    transactionEvents: TransactionEventsTopicConfig
 ) extends DerivedConfig
 
 case class DatabaseConfig(

@@ -1,4 +1,4 @@
-package repository.mocks
+package com.rezo.repository.mocks
 
 import com.rezo.models.User
 import com.rezo.repository.Exceptions.RepositoryException
@@ -16,7 +16,7 @@ object UsersRepositoryMock extends Mock[UsersRepositoryTrait] {
       extends Effect[
         (Int, String, String, String, String, String),
         RepositoryException,
-        UUID
+        User
       ]
 
   val compose: URLayer[Proxy, UsersRepositoryTrait] =
@@ -36,7 +36,7 @@ object UsersRepositoryMock extends Mock[UsersRepositoryTrait] {
               email: String,
               phoneNumber: String,
               passwordHash: String
-          ): RezoDBTask[UUID] =
+          ): RezoDBTask[User] =
             proxy(
               CreateUser,
               (

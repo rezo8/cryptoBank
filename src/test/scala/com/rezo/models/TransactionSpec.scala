@@ -1,7 +1,7 @@
-package models
+package com.rezo.models
 
 import com.rezo.models.{Transaction, TransactionValue}
-import fixtures.BookkeepingFixtures.*
+import com.rezo.fixtures.BookkeepingFixtures.*
 import org.scalatest.*
 import org.scalatest.flatspec.*
 import org.scalatest.matchers.*
@@ -32,7 +32,7 @@ class TransactionSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "correctly return change value" in {
-    defaultTransaction.getChange().contains(nextTransactionValue(0.005))
+    defaultTransaction.getChange.contains(nextTransactionValue(0.005))
   }
 
   it should "correctly sum all outputs" in {
