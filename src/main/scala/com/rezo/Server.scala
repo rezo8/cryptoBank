@@ -19,7 +19,6 @@ import com.rezo.repository.{
 import com.rezo.services.{AccountsService, AddressesService, UsersService}
 import doobie.*
 import doobie.util.transactor.Transactor
-import doobie.util.transactor.Transactor.Aux
 import pureconfig.ConfigSource
 import zio.*
 

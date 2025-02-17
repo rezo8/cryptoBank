@@ -8,12 +8,14 @@ val circeVersion = "0.14.10"
 
 ThisBuild / scalaVersion := scala3Version
 
+// TODO split project across server and eventListener with shared dependencies.
 lazy val root = project
   .in(file("."))
   .settings(
     name := "bitcoin",
     version := "0.1.0-SNAPSHOT",
     scalaVersion := scala3Version,
+    mainClass := Some("com.rezo.Server"),
     libraryDependencies ++= Seq(
       // Doobie Imports
       "org.tpolecat" %% "doobie-core" % doobieVersion,
@@ -31,7 +33,7 @@ lazy val root = project
       "org.scalikejdbc" %% "scalikejdbc" % "4.3.2",
 
       // config
-      "com.typesafe" % "com/rezo/config" % "1.4.3",
+      "com.typesafe" % "config" % "1.4.3",
       "com.github.pureconfig" %% "pureconfig-core" % "0.17.8",
       // Flyway
       "org.flywaydb" % "flyway-core" % "11.3.2",
@@ -53,6 +55,7 @@ lazy val root = project
       "org.typelevel" %% "cats-effect-testing-scalatest" % "1.6.0"
     )
   )
+
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 enablePlugins(FlywayPlugin)
 

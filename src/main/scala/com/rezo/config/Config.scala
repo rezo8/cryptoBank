@@ -24,7 +24,6 @@ case class ConsumerConfig(
     consumerCount: Int
 )
 
-//case class ProducerConfig()
 case class ServerConfig(
     database: DatabaseConfig,
     serverMetadataConfig: ServerMetadataConfig,
